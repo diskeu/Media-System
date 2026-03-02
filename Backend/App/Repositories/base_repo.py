@@ -2,6 +2,7 @@
 from __future__ import annotations
 from utils.type_helpers import check_type
 from utils.sql_helpers import format_value
+from utils.sentinel import DEFAULT
 from types import GeneratorType
 from mysql.connector.errors import (
     OperationalError,
@@ -388,7 +389,7 @@ class BaseRepo():
         # inspecting how many param the func takes
         len_call_signature = len(inspect.signature(model.__init__).parameters) - 1 # len of the param - self
 
-        default_parm: list = [-1 for _ in range(len_call_signature)]               # -1 as a default value for not specified parm
+        default_parm: list = [DEFAULT for _ in range(len_call_signature)]          # default value for not specified parm
 
         temp_model = model(*default_parm)                                          # initalising the model with the default parmeters
 

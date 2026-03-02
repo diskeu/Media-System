@@ -1,10 +1,11 @@
 # Image Model for images table
 from Backend.App.Models.base_model import BaseModel
+from utils.sentinel import DEFAULT
 
 class Image(BaseModel):
     def __init__(
         self,
-        image_id: int,
+        image_id: int | DEFAULT,
         image_path: str,
         post_id: int
     ):

@@ -73,12 +73,7 @@ class VoteRepo(BaseRepo):
                 "WHERE user_id = %s AND post_id = %s"
             )
             return self.execute_write(delete_query, user_id, post_id) # None | RepoError
-        
 
-            return self.post_model(     # None | RepoError
-                "messenger.posts",
-                vote_instance
-            )
         vote_instance = Vote(
             user_id,
             post_id,
@@ -87,10 +82,17 @@ class VoteRepo(BaseRepo):
         # Checking on Repo Error
         columns_values: tuple = self.get_columns_values(vote_instance)
         if isinstance(columns_values, self.RepoError): return columns_values
+        columns, values = columns_values
 
-        self.execute_write()
+        # delete ';' and adding duplicate key statement
+        insert_query, insert_vals = self.build_insert_query("messenger.votes", columns, values)
+        insert_query = insert_query[:-1]
+        insert_vals.append(vote_instance.vote)
+        insert_query += " ON DUPLICATE KEY UPDATE vote = %s;"
 
-    def update_single_post(self, post_id, values: dict) -> None | BaseRepo.RepoError:
+        self.execute_write(insert_query, *insert_vals)
+
+    def update_posts_vote(self, post_id, values: dict) -> None | BaseRepo.RepoError:
         """Given a 'post_id', values and a 'mysql.connector.connection_cext.CMySQLConnection', updates the post's values"""
         update_query, insert_values = self.build_update_query(
             table="messenger.posts",
@@ -121,4 +123,5 @@ from Backend.App.Database.connection import connect
 from Backend.App.Models.vote import Vote
 
 c_r = VoteRepo(setup_logger(), connect("/Users/TimJelenz/Desktop/messenger/Backend/Configurations/mysql.conf", "root"))
-c_r.get_users_vote(1002, 1, 2, 3, 32, 12, 44)
+print(c_r.get_users_vote(1002, 1, 2, 3, 32, 12, 44))
+c_r.vote(1002, 12, 1)

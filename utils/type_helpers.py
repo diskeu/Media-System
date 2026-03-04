@@ -14,3 +14,7 @@ def same_type(*objcts: object) -> bool:
     type_set: set = {type_o for o in objcts for type_o in check_type(o)}
     print(type_set)
     return True if len(type_set) == 1 else False
+
+def convert_to_string(val: any):
+    if isinstance(val, str): return val
+    return str(val)

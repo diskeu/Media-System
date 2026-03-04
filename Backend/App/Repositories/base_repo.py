@@ -169,17 +169,41 @@ class BaseRepo():
         )
     def get_all_enriched(
             self,
-            post_ids: Iterable,*columns):
+            table: str,
+            primary_keys: tuple[tuple[str], list[tuple[any]]],
+            condition: str = "",
+            values: Iterable = None,
+            *columns
+        ) -> list[dict[any]] | RepoError:
         """
-        Given post_ids returns all necessary information from the specified columns\n
+        Given primary_keys returns all necessary information from the specified columns\n
         {primary_key: [parm1, parm2, parm3...]}\n
-        Note: In contrast to the normal get_post_info function it is intended to have acces to other columns via. Join.\n
-        It is also for more than one post and doesn't return a PostModel\n
-        To use columns from other Tables you have to type the specific table-shortname infront of it\n
-            v - votes
-            i - images
+        Note: In contrast to the normal get_all function it is intended to have acces to other columns via. JOIN.\n
+        It is also for more than one post and the return isn't intendet to be formatted into Models\n
+        #### To use columns from other Tables you have to type the specific table-shortname seperated by a dot -> (p.post_id) ####
+            - p - posts
+            - u - users
+            - c - comments
+            - com - communitys
+            - com - community_members
+            - v - votes
+            - i - images
+        Condition should be formatted with %s -> 'll be later replaced with the values\n
+        Primary Keys have to be in example format -> (("post_id", "community_id"), [("1", "10"), ("2", "15"), ("3", "20")])\n
+        ## Returns: ###
+        Returns the sql connector return, in dict format | RepoError.
         """
 
+        # if condition == "" and values == None: return [{}]
+
+        # converting primary keys into a WHERE statement
+        where_statement = "WHERE ({}) IN ({})".format(
+            # Column Names
+            ", ".join(primary_keys[0]),
+            # converting tuples into format ((1, 2), (3, 4)...)
+            ", ".join("({})".format(", ".join(format_value(v) for v in t)) for t in primary_keys[1])
+        )
+        
     def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
         """
         Small help func, that builds an ORM for all major models
@@ -498,3 +522,6 @@ class BaseRepo():
             )
             values_items.append(tuple(attributes))
         return columns, values_items
+    
+b = BaseRepo(12)
+b.get_all_enriched("messenger.users", (("post_id", "community_id"), [("1", "10"), (DEFAULT, "15"), ("3", "20")]), "", None)

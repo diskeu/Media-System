@@ -1,4 +1,5 @@
 from utils.sentinel import DEFAULT
+from utils.type_helpers import convert_to_string
 
 def format_value(value):
     """Formats value to correspond the sql syntax"""
@@ -6,4 +7,4 @@ def format_value(value):
     if type(value) == bool: return value
     if value == DEFAULT: return "DEFAULT"
     elif value == None: return None
-    return str(value)
+    return convert_to_string(value)

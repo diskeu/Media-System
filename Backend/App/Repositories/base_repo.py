@@ -21,6 +21,7 @@ from Backend.App.Exceptions.DB_Exceptions import (
 from Backend.App.Models.base_model import BaseModel as Model
 from mysql.connector.connection import MySQLConnection
 from mysql.connector.cursor import MySQLCursor
+from typing import Iterable
 import inspect
 
 class BaseRepo():
@@ -166,6 +167,18 @@ class BaseRepo():
             select_query,
             *(values if values else [])
         )
+    def get_all_enriched(
+            self,
+            post_ids: Iterable,*columns):
+        """
+        Given post_ids returns all necessary information from the specified columns\n
+        {primary_key: [parm1, parm2, parm3...]}\n
+        Note: In contrast to the normal get_post_info function it is intended to have acces to other columns via. Join.\n
+        It is also for more than one post and doesn't return a PostModel\n
+        To use columns from other Tables you have to type the specific table-shortname infront of it\n
+            v - votes
+            i - images
+        """
 
     def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
         """

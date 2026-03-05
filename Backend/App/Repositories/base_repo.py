@@ -170,7 +170,7 @@ class BaseRepo():
     def get_all_enriched(
         self,
         table: str,
-        primary_keys: tuple[tuple[str, ...], list[tuple[any, ...]]] | None,
+        primary_keys: tuple[tuple[str, ...], list[tuple[any, ...]]] | None, # TODO fix Bug related to -> if len(primary_keys[0]) > 0:
         joins: list[tuple[str, str]] = None,
         where_statement: str = None,
         condition: str = None,
@@ -178,20 +178,27 @@ class BaseRepo():
         *columns
     ) -> list[dict[any]] | RepoError:
         """
-        Given primary_keys returns all necessary information from the specified columns\n
-        {primary_key: [parm1, parm2, parm3...]}\n
+        Given a table and primary_keys returns all necessary information from the specified columns\n
+        Primary Keys have to be in example format -> (("post_id", "community_id"), [("1", "10"), ("2", "15"), ("3", "20")]) or None\n
         Note: In contrast to the normal get_info function it is intended to have acces to other columns via. JOIN.\n
-        It is also for more than one post and the return isn't intendet to be formatted into Models\n
+        It is built for more than one post and the return isn't intendet to be formatted into Models\n
+        NOTE: values 'll be added in order auto-generated primary key values -> specified values
+
+        ## joins ##
         #### To use columns from other Tables you have to type a join statement into the joins parameter####
         The joins have to be formatted like this
         joins = [
             ("INNER JOIN votes v", "p.post_id = v.post_id"),
             ("LEFT JOIN images i", "p.post_id = i.post_id")
         ]
-
+        NOTE: Joins should'nt contain %s placeholders
+        ## where_statement ##
+        additional where statement that 'll get added
+        
+        ## condition ##
+        Additonal conditon that 'll be added after the primary - key statement
         Condition should be formatted with %s -> 'll be later replaced with the values (the formatt vals of %s need to be given into values parm)\n
-        NOTE: Conditon 'll be added after the primary key statement\n
-        Primary Keys have to be in example format -> (("post_id", "community_id"), [("1", "10"), ("2", "15"), ("3", "20")]) or None\n
+
         ## Returns: ###
         Returns the sql connector return, in dict format | RepoError.
         """

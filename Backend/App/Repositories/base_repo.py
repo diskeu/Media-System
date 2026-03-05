@@ -168,42 +168,91 @@ class BaseRepo():
             *(values if values else [])
         )
     def get_all_enriched(
-            self,
-            table: str,
-            primary_keys: tuple[tuple[str], list[tuple[any]]],
-            condition: str = "",
-            values: Iterable = None,
-            *columns
-        ) -> list[dict[any]] | RepoError:
+        self,
+        table: str,
+        primary_keys: tuple[tuple[str, ...], list[tuple[any, ...]]] | None,
+        joins: list[tuple[str, str]] = None,
+        where_statement: str = None,
+        condition: str = None,
+        values: Iterable | None = None,
+        *columns
+    ) -> list[dict[any]] | RepoError:
         """
         Given primary_keys returns all necessary information from the specified columns\n
         {primary_key: [parm1, parm2, parm3...]}\n
-        Note: In contrast to the normal get_all function it is intended to have acces to other columns via. JOIN.\n
+        Note: In contrast to the normal get_info function it is intended to have acces to other columns via. JOIN.\n
         It is also for more than one post and the return isn't intendet to be formatted into Models\n
-        #### To use columns from other Tables you have to type the specific table-shortname seperated by a dot -> (p.post_id) ####
-            - p - posts
-            - u - users
-            - c - comments
-            - com - communitys
-            - com - community_members
-            - v - votes
-            - i - images
-        Condition should be formatted with %s -> 'll be later replaced with the values\n
-        Primary Keys have to be in example format -> (("post_id", "community_id"), [("1", "10"), ("2", "15"), ("3", "20")])\n
+        #### To use columns from other Tables you have to type a join statement into the joins parameter####
+        The joins have to be formatted like this
+        joins = [
+            ("INNER JOIN votes v", "p.post_id = v.post_id"),
+            ("LEFT JOIN images i", "p.post_id = i.post_id")
+        ]
+
+        Condition should be formatted with %s -> 'll be later replaced with the values (the formatt vals of %s need to be given into values parm)\n
+        NOTE: Conditon 'll be added after the primary key statement\n
+        Primary Keys have to be in example format -> (("post_id", "community_id"), [("1", "10"), ("2", "15"), ("3", "20")]) or None\n
         ## Returns: ###
         Returns the sql connector return, in dict format | RepoError.
         """
 
-        # if condition == "" and values == None: return [{}]
+        # JOIN
+        join_statement = ""
+        if joins:
+            join_statement = " ".join(f"{j[0]} ON {j[1]}" for j in joins)
+        
+        # collect all WHERE conditions
+        where_statement_all = []
+        combined_values = []
 
-        # converting primary keys into a WHERE statement
-        where_statement = "WHERE ({}) IN ({})".format(
+        def convert_tuples_format(tuple_list: list[tuple[any]]) -> str:
+            """
+            Function that converts list of tuples into format ((1, 2), (3, 4)...)\n
+            and adds each value formatted into values
+            """
+            def add_to_values(val: any) -> str:
+                """Function that adds the appropriate type of the value to combined_values and always returns %s"""
+                combined_values.append(format_value(val))
+                return "%s"
+            
+            # converting tuples into format ((1, 2), (3, 4)...)
+            return ", ".join("({})".format(", ".join(add_to_values(v) for v in t)) for t in tuple_list)
+            
+        # PRIMARY KEYS
+        if len(primary_keys[0]) > 0:
+            pk_condition = "({}) IN ({})".format(
             # Column Names
             ", ".join(primary_keys[0]),
-            # converting tuples into format ((1, 2), (3, 4)...)
-            ", ".join("({})".format(", ".join(format_value(v) for v in t)) for t in primary_keys[1])
+
+            # getting the primary key values     
+            convert_tuples_format(primary_keys[1])
         )
-        
+            where_statement_all.append(pk_condition)
+
+        # Additional WHERE
+        if where_statement:
+            where_statement_all.append(where_statement)
+
+        # Combine
+        conditions: str = (
+            f"{join_statement} "
+            f"{"WHERE " + " AND ".join(where_statement_all) if where_statement_all else ""} "
+            f"{condition if condition else ""}" # Additional condition
+        )
+
+        if values:
+             for v in values: combined_values.append(v)
+
+        select_query = self.build_select_query(
+            table,
+            conditions,
+            *columns
+        )
+        # returns list[dict[any]] | RepoError
+        return self.execute_read(
+            select_query,
+            *(values if values else [])
+        )
     def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
         """
         Small help func, that builds an ORM for all major models
@@ -524,4 +573,15 @@ class BaseRepo():
         return columns, values_items
     
 b = BaseRepo(12)
-b.get_all_enriched("messenger.users", (("post_id", "community_id"), [("1", "10"), (DEFAULT, "15"), ("3", "20")]), "", None)
+joins = [
+            ("INNER JOIN votes v", "p.post_id = v.post_id"),
+            ("LEFT JOIN images i", "p.post_id = i.post_id")
+        ]
+b.get_all_enriched(
+    table="messenger.users",
+    primary_keys=(("post_id", "community_id"), [("1", "10"), ("s", "15"), ("3", "20")]),
+    condition="ORDER BY p.post_id ASC",
+    where_statement="p.post_id > 2 AND v = 3",
+    joins=[("INNER JOIN", "p.x = s.x")],
+    values=None
+    )

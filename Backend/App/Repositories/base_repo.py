@@ -175,7 +175,7 @@ class BaseRepo():
         where_statement: str = None,
         condition: str = None,
         values: Iterable | None = None,
-        *columns
+        columns=[]
     ) -> list[dict[any]] | RepoError:
         """
         Given a table and primary_keys returns all necessary information from the specified columns\n
@@ -258,7 +258,7 @@ class BaseRepo():
         # returns list[dict[any]] | RepoError
         return self.execute_read(
             select_query,
-            *(values if values else [])
+            *combined_values
         )
     def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
         """
@@ -578,17 +578,3 @@ class BaseRepo():
             )
             values_items.append(tuple(attributes))
         return columns, values_items
-    
-b = BaseRepo(12)
-joins = [
-            ("INNER JOIN votes v", "p.post_id = v.post_id"),
-            ("LEFT JOIN images i", "p.post_id = i.post_id")
-        ]
-b.get_all_enriched(
-    table="messenger.users",
-    primary_keys=(("post_id", "community_id"), [("1", "10"), ("s", "15"), ("3", "20")]),
-    condition="ORDER BY p.post_id ASC",
-    where_statement="p.post_id > 2 AND v = 3",
-    joins=[("INNER JOIN", "p.x = s.x")],
-    values=None
-    )

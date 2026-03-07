@@ -89,6 +89,7 @@ class TopNHeap():
         else:
             self.arr.append(item)
             cur_i = len(self.arr) - 1
+            self.post_lookup[item[0]] = cur_i
             self.heapify_up(self, cur_i)
 
     def remove_from_heap(self, post_id: int):
@@ -103,9 +104,21 @@ class TopNHeap():
 
         if index == len(self.arr) - 1: return # nothing to update
 
+        # Rebalance Heap
         parent_i = (index - 1) // 2
-        if self.arr[parent_i][1] > last_item[1]: self.heapify_up(index)
-        else: self.heapify_down(index)
+        if index == 0 or self.arr[parent_i][1] < last_item[1]: self.heapify_down(index)
+        else: self.heapify_up(index)
+
+    def update_hotness(self, post_id: int, hotness: int):
+        heap_i = self.post_lookup.get(post_id, None)
+        if heap_i == None: return
+
+        self.arr[heap_i][1] = hotness
+
+        # Rebalance Heap
+        parent_i = (heap_i - 1) // 2
+        if heap_i == 0 or self.arr[parent_i][1] < hotness: self.heapify_down(heap_i)
+        else: self.heapify_up(heap_i)
 
     def return_all() -> list[tuple[int, int]]:
         """Returns the top n hottest post"""

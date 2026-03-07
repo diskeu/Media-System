@@ -1,19 +1,13 @@
 # Top-N-Heap that stores the top hottest post_ids
 from datetime import datetime
-from collections import deque
+from Backend.App.cache.hotness_calc import calculate_hotness
 import asyncio
-def calculate_hotness(votes: int, created_at: datetime):
-    """
-    Function that calculates the hotness of a post\n
-    votes has to be a sum of all (downvotes & upvotes)
-    """
-    ...
 
 class TopNHeap():
-    def __init__(self, arr: list[tuple[int, int]], max_size: int, update_intervall: int):
+    def __init__(self, arr: list[tuple[int, int, datetime, int]], max_size: int, update_intervall: int):
         """
         Top-N-Heap for the top n hottest post in memory\n
-        arr must be a list of tuples with [0] = post_id and [1] = hotness
+        arr must be a list of tuples with [0] = post_id, [1] = hotness and [2] = created_at, i[3] = net_votes
         """
         self.arr = arr
         self.max_size = max_size
@@ -23,7 +17,11 @@ class TopNHeap():
     async def update_heap_tracker(self):
         while True:
             asyncio.sleep(self.update_intervall)
-
+            # updating all values of the old heap
+            for i in range(len(self.arr)):
+                self.arr[i][1] = calculate_hotness(i[3], i[2])
+            self.update_all()
+            
     def heapify_down(self, cur_i: int):
         smallest = cur_i
         len_arr = len(self.arr)
@@ -47,12 +45,19 @@ class TopNHeap():
 
             cur_i = smallest
 
-    def build_max_heap(self):
+    def update_all(self):
         # getting index of last element with a child
         cur_i = (len(self.arr) - 2) // 2
         
         for cur_i in range(cur_i, -1, -1):
             self.heapify_down(cur_i)
+        
+    def build_min_heap(self):
+        """Wrapper for update_all to build completly new min - heap"""
+        # creating post_lookup
+        self.post_lookup = {post_id: i for i, (post_id, _, _) in enumerate(self.arr)}
+
+        self.update_all()
     
     def peak(self) -> tuple[int, int]:
         """Returns tuple with the unhottest post in the array"""
@@ -72,8 +77,8 @@ class TopNHeap():
             
             cur_i = parent_i
 
-    def insert(self, item: tuple[int, int]):
-        """Function to insert tuple[post_id, hotness]"""
+    def insert(self, item: tuple[int, int, datetime, int]):
+        """Function to insert tuple[post_id, hotness, created_at, net_votes]"""
 
         # checking if the array is full
         if self.max_size <= len(self.arr):
@@ -109,7 +114,7 @@ class TopNHeap():
         if index == 0 or self.arr[parent_i][1] < last_item[1]: self.heapify_down(index)
         else: self.heapify_up(index)
 
-    def update_hotness(self, post_id: int, hotness: int):
+    def update_hotness(self, post_id: int, hotness: int): # T: O(log2(size arr))
         heap_i = self.post_lookup.get(post_id, None)
         if heap_i == None: return
 
@@ -120,5 +125,6 @@ class TopNHeap():
         if heap_i == 0 or self.arr[parent_i][1] < hotness: self.heapify_down(heap_i)
         else: self.heapify_up(heap_i)
 
-    def return_all() -> list[tuple[int, int]]:
+    def return_all() -> list[tuple[int, int, datetime]]:
         """Returns the top n hottest post"""
+

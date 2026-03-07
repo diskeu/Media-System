@@ -91,5 +91,21 @@ class TopNHeap():
             cur_i = len(self.arr) - 1
             self.heapify_up(self, cur_i)
 
+    def remove_from_heap(self, post_id: int):
+        index = self.post_lookup.pop(post_id, None)
+        if index == None: return # item doesn't exist
+
+        # updating heap
+        last_item = self.arr.pop()
+        
+        self.arr[index] = last_item # removes item
+        self.post_lookup[last_item[0]] = index
+
+        if index == len(self.arr) - 1: return # nothing to update
+
+        parent_i = (index - 1) // 2
+        if self.arr[parent_i][1] > last_item[1]: self.heapify_up(index)
+        else: self.heapify_down(index)
+
     def return_all() -> list[tuple[int, int]]:
         """Returns the top n hottest post"""

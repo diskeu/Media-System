@@ -19,6 +19,7 @@ class TopNHeap():
         self.sorted_cache = None
         self.max_size = max_size
         self.update_intervall = update_intervall
+        
     async def update_heap_tracker(self):
         while True:
             asyncio.sleep(self.update_intervall)
@@ -61,15 +62,15 @@ class TopNHeap():
 
     def insert(self, item: tuple[int, int]):
         """Function to insert tuple[post_id, hotness]"""
-        if item[1] <= self.arr[0]: return # returning if hotness is too small
-        self.arr.append(item)
         self.sorted_cache = None # removing stored arr
 
         # checking if the array is full
         if self.max_size <= len(self.arr):
-            self.arr[-1], self.arr[0] = self.arr[0], self.arr[-1]
+            if item[1] <= self.arr[0][1]: return # returning if hotness is too small
+            self.arr[0] = item                   # removing unhottest item
             self.heapify_down(0)
         else:
+            self.arr.append(item)
             cur_i = len(self.arr) - 1
             self.heapify_up(self, cur_i)
 

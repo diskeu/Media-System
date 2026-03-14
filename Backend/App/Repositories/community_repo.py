@@ -9,9 +9,9 @@ class CommunityRepo(BaseRepo):
         self.logger = logger
         self.cnx = cnx
 
-    def get_community_info(self, community_id: int, *columns: str) -> Community | BaseRepo.RepoError:
+    async def get_community_info(self, community_id: int, *columns: str) -> Community | BaseRepo.RepoError:
         """Community - ORM: Given a 'community_id', returns instance of the Community class or RepoError"""
-        community_model = self.get_info(
+        community_model = await self.get_info(
             Community,
             "messenger.communitys",
             {"community_id": community_id},
@@ -19,14 +19,14 @@ class CommunityRepo(BaseRepo):
         )
         return community_model # model | RepoError
 
-    def insert_community(self, *models: Community) -> None | BaseRepo.RepoError:
+    async def insert_community(self, *models: Community) -> None | BaseRepo.RepoError:
         """Given Community models, inserts them into the DB, returns None | RepoError"""
-        return self.post_model(     # None | RepoError
+        return await self.post_model(     # None | RepoError
             "messenger.communitys",
             *models
         )
 
-    def update_single_community(self, community_id, values: dict) -> None | BaseRepo.RepoError:
+    async def update_single_community(self, community_id, values: dict) -> None | BaseRepo.RepoError:
         """Given a 'community_id', values and a 'mysql.connector.connection_cext.CMySQLConnection', updates the community's values"""
         update_query, insert_values = self.build_update_query(
             table="messenger.communitys",
@@ -36,9 +36,9 @@ class CommunityRepo(BaseRepo):
         insert_values.append(community_id)
 
         # executing statement
-        return self.execute_write(update_query, *insert_values) # None | RepoError
+        return await self.execute_write(update_query, *insert_values) # None | RepoError
 
-    def delete_communitys(self, *community_id: int) -> None| BaseRepo.RepoError:
+    async def delete_communitys(self, *community_id: int) -> None| BaseRepo.RepoError:
         """Given a list of community_id, deletes the corresponding community"""
         # making condition
         statement = ["%s" for _ in range(len(community_id))]
@@ -50,5 +50,5 @@ class CommunityRepo(BaseRepo):
             condition=condition
         )
         # executing statement
-        return self.execute_write(delete_query, *community_id)
-        self.get
+        return await self.execute_write(delete_query, *community_id)
+    

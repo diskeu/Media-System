@@ -11,5 +11,7 @@ async def comment_repo():
     c_r = CommentRepo(setup_logger(), connection)
     x = await c_r.get_comment_info(3)
     print(x.comment_content)
-
+    print(await c_r.get_sub_comments([44]))
+    await c_r.update_single_comment(1, {"comment_id": 2})
+    await c_r.delete_comments(1)
 asyncio.run(comment_repo())

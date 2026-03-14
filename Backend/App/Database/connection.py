@@ -109,8 +109,7 @@ async def connect(config_file_location: str, user: str | None = None, attempts: 
         except MysqlConnectorError as err:
             # Syntacx error
             if isinstance(err, ProgrammingError):
-                print(err)
-                mysql_connection_logger.exception("Syntax error or table doesn't exist")
+                mysql_connection_logger.exception("Syntax error or table doesn't exist", err)
                 return None
             
             # Permission error

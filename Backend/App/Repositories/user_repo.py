@@ -9,9 +9,9 @@ class UserRepo(BaseRepo):
         self.logger = logger
         self.cnx = cnx
 
-    def get_user_info(self, user_id: int, *columns: str) -> User | BaseRepo.RepoError:
+    async def get_user_info(self, user_id: int, *columns: str) -> User | BaseRepo.RepoError:
         """User - ORM: Given a 'user_id', returns instance of the user class or RepoError"""
-        user_model = self.get_info(
+        user_model = await self.get_info(
             User,
             "messenger.users",
             {"user_id": user_id},
@@ -20,14 +20,14 @@ class UserRepo(BaseRepo):
         return user_model # model | RepoError
     
 
-    def insert_user(self, *models: User) -> None | BaseRepo.RepoError:
+    async def insert_user(self, *models: User) -> None | BaseRepo.RepoError:
         """Given user models, inserts them into the DB, returns None | RepoError"""
-        return self.post_model(     # None | RepoError
+        return await self.post_model(     # None | RepoError
             "messenger.users",
             *models
         )
     
-    def update_single_user(self, user_id, values: dict) -> None | BaseRepo.RepoError:
+    async def update_single_user(self, user_id, values: dict) -> None | BaseRepo.RepoError:
         """Given a 'user_id', values and a 'mysql.connector.connection_cext.CMySQLConnection', updates the user's values"""
         update_query, insert_values = self.build_update_query(
             table="messenger.users",
@@ -37,9 +37,9 @@ class UserRepo(BaseRepo):
         insert_values.append(user_id)
 
         # executing statement
-        return self.execute_write(update_query, *insert_values) # None | RepoError
+        return await self.execute_write(update_query, *insert_values) # None | RepoError
 
-    def delete_users(self, *users: int) -> None| BaseRepo.RepoError:
+    async def delete_users(self, *users: int) -> None| BaseRepo.RepoError:
         """Given a list of user_ids, deletes the corresponding users"""
         # making condition
         user_statement = ["%s" for _ in range(len(users))]
@@ -51,4 +51,4 @@ class UserRepo(BaseRepo):
             condition=condition
         )
         # executing statement
-        return self.execute_write(delete_query, *users)
+        return await self.execute_write(delete_query, *users)

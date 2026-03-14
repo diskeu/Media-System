@@ -57,7 +57,8 @@ h.build_min_heap()
 h.insert((25, calculate_hotness(100,  datetime(2026, 3, 7, 10, 45)), datetime(2026, 3, 7, 10, 45), 4))
 arr_before = h.arr
 # print_sorted()
-if h.arr != arr_before: print("Sorting changed original heap")
+# if h.arr != arr_before: print("Sorting changed original heap")
 print(is_heap())
-print_sorted()
+h.update_hotness_all()
+print(is_heap())
 

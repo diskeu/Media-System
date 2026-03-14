@@ -18,12 +18,15 @@ class TopNHeap():
     async def update_heap_tracker(self):
         while True:
             await asyncio.sleep(self.update_intervall)
-            self.cache = None
-            # updating all values of the old heap
-            for i in range(len(self.arr)):
-                hotness = calculate_hotness(self.arr[i][3], self.arr[1][2])
-                self.arr[i] = (self.arr[i][0], hotness, self.arr[i][2], self.arr[i][3])
-            self.update_all()
+            self.update_hotness_all()
+
+    def update_hotness_all(self):
+        self.cache = None
+        # updating all values of the old heap
+        for i in range(len(self.arr)):
+            hotness = calculate_hotness(self.arr[i][3], self.arr[1][2])
+            self.arr[i] = (self.arr[i][0], hotness, self.arr[i][2], self.arr[i][3])
+        self.update_all()
                         
     def heapify_down(self, cur_i: int, arr: list = None, len_arr: int = None):
         smallest = cur_i

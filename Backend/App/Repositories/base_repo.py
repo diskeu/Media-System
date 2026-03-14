@@ -19,8 +19,8 @@ from Backend.App.Exceptions.DB_Exceptions import (
     SqlReturnTypeError,
 )
 from Backend.App.Models.base_model import BaseModel as Model
-from mysql.connector.connection import MySQLConnection
-from mysql.connector.cursor import MySQLCursor
+from mysql.connector.aio.connection import MySQLConnection as aio_MySQLConnection
+from mysql.connector.aio.cursor import AioCursor
 from typing import Iterable
 import inspect
 
@@ -78,13 +78,13 @@ class BaseRepo():
         # Other Errors
         else: return self.RepoError(False, 10, "Error -> check Exception for more info", err)
 
-    def create_cursor_obj(self, cnx: MySQLConnection, dict_format: bool = True) -> MySQLCursor | RepoError:
+    async def create_cursor_obj(self, cnx: aio_MySQLConnection, dict_format: bool = True) -> AioCursor | RepoError:
         """Given a Connection returns a cursor object or RepoError"""
         # reconnecting to DB and defining cursor
-        if not cnx.is_connected(): cnx.reconnect()
+        if not cnx.is_connected(): await cnx.reconnect()
         try:
             # returning in appropriate format
-            return cnx.cursor(dictionary=True) if dict_format else cnx.cursor()
+            return await cnx.cursor(dictionary=True) if dict_format else await cnx.cursor()
         except OperationalError as err:
             return self.RepoError(
                 False,

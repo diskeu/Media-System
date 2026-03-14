@@ -252,7 +252,7 @@ class BaseRepo():
             select_query,
             *combined_values
         )
-    def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
+    async def get_info(self, model, table: str, primary_keys: dict, *columns: str) -> Model | RepoError:
         """
         Small help func, that builds an ORM for all major models
         
@@ -279,14 +279,14 @@ class BaseRepo():
             *columns
         )
         # executing query
-        info = self.execute_read(select_query, *tuple(primary_keys.values()))
+        info = await self.execute_read(select_query, *tuple(primary_keys.values()))
         if isinstance(info, self.RepoError): return info
 
         # defining model with the given sql return
         info_model: Model = self.create_model(info, model)
         return info_model # returning model or RepoError
     
-    def post_model(self, table: str, *models: Model) -> None | BaseRepo.RepoError:
+    async def post_model(self, table: str, *models: Model) -> None | BaseRepo.RepoError:
         """
         Given instances of the same model class, creates a db entry with the specified propertys from the user model\n
         Note: The models must have one primary key\n
@@ -309,7 +309,7 @@ class BaseRepo():
         insert_query, insert_val = self.build_insert_query(table, columns, values)
 
         # executing query
-        return self.execute_write(insert_query, *insert_val) # returns None | RepoError
+        return await self.execute_write(insert_query, *insert_val) # returns None | RepoError
 
     def build_select_query(self, table: str, other_statement: str = "", *columns: str) -> str:
         """

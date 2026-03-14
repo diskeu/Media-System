@@ -59,9 +59,3 @@ class VoteRepo(BaseRepo):
         insert_query += " ON DUPLICATE KEY UPDATE vote = %s;"
 
         self.execute_write(insert_query, *insert_vals)
-
-from Backend.App.logger_config import setup_logger
-from Backend.App.Database.connection import connect
-
-v_r = VoteRepo(setup_logger(), connect("/Users/TimJelenz/Desktop/messenger/Backend/Configurations/mysql.conf", "root"))
-v_r.get_users_vote(1002, 22, 44, 32)

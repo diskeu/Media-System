@@ -9,6 +9,7 @@ from Backend.App.Models.comment import Comment
 async def comment_repo():
     connection = await connect("/Users/TimJelenz/Desktop/messenger/Backend/Configurations/mysql.conf", "root")
     c_r = CommentRepo(setup_logger(), connection)
-    await c_r.get_comment_info(22)
+    x = await c_r.get_comment_info(3)
+    print(x.comment_content)
 
 asyncio.run(comment_repo())

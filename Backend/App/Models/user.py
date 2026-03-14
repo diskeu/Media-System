@@ -11,7 +11,7 @@ class User(BaseModel):
         email: str,
         created_at: datetime | DEFAULT,
         birth_date: date,
-        last_seen: datetime | DEFAULT
+        last_seen: datetime | DEFAULT | None
     ):
         self.user_id = user_id
         self.user_name = user_name

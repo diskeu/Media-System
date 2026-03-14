@@ -9,9 +9,9 @@ class CommentRepo(BaseRepo):
         self.logger = logger
         self.cnx = cnx
 
-    def get_comment_info(self, comment_id: int, *columns: str) -> Comment | BaseRepo.RepoError:
+    async def get_comment_info(self, comment_id: int, *columns: str) -> Comment | BaseRepo.RepoError:
         """Comment - ORM: Getting comment info based on the comment_id, returns Comment | RepoError"""
-        comment_model = self.get_info(
+        comment_model = await self.get_info(
             Comment,
             "messenger.comments",
             {"comment_id": comment_id},
@@ -19,7 +19,7 @@ class CommentRepo(BaseRepo):
         )
         return comment_model # model | RepoError
     
-    def get_sub_comments(self, post_ids: list, *columns: str) -> list[dict[any]] | BaseRepo.RepoError:
+    async def get_sub_comments(self, post_ids: list, *columns: str) -> list[dict[any]] | BaseRepo.RepoError:
         """Gets all of the comments of specific post_ids"""
 
         # checking values
@@ -31,16 +31,16 @@ class CommentRepo(BaseRepo):
             post_ids = ", ".join("%s" for _ in range(len(post_ids)))
         )
         # returns comments | RepoError
-        return self.execute_read(select_query, *post_ids)
+        return await self.execute_read(select_query, *post_ids)
 
-    def insert_comment(self, *models: Comment) -> None | BaseRepo.RepoError:
+    async def insert_comment(self, *models: Comment) -> None | BaseRepo.RepoError:
         """Given Comment models, inserts them into the DB, returns None | RepoError"""
-        return self.post_model(     # None | RepoError
+        return await self.post_model(     # None | RepoError
             "messenger.comments",
             *models
         )
 
-    def update_single_comment(self, comment_id: int, values: dict) -> None | BaseRepo.RepoError:
+    async def update_single_comment(self, comment_id: int, values: dict) -> None | BaseRepo.RepoError:
         """Given a 'comment_id', values and a 'mysql.connector.connection_cext.CMySQLConnection', updates the comment's values"""
         update_query, insert_values = self.build_update_query(
             table="messenger.comments",
@@ -50,9 +50,9 @@ class CommentRepo(BaseRepo):
         insert_values.append(comment_id)
 
         # executing statement
-        return self.execute_write(update_query, *insert_values) # None | RepoError 
+        return await self.execute_write(update_query, *insert_values) # None | RepoError 
     
-    def delete_comments(self, *comment_ids: int) -> None| BaseRepo.RepoError:
+    async def delete_comments(self, *comment_ids: int) -> None| BaseRepo.RepoError:
         """Given a list of comment_ids, deletes the corresponding comments"""
         # making condition
         statement = ["%s" for _ in range(len(comment_ids))]
@@ -64,4 +64,4 @@ class CommentRepo(BaseRepo):
             condition=condition
         )
         # executing statement
-        return self.execute_write(delete_query, *comment_ids)
+        return await self.execute_write(delete_query, *comment_ids)

@@ -92,24 +92,24 @@ class BaseRepo():
                 "Network / Timeout error",
                 err
         )
-    def execute_write(self, query: str, *values) -> None | RepoError:
+    async def execute_write(self, query: str, *values) -> None | RepoError:
         """
         Given a sql insert/update/delete - query and values, executes the query\n
         returns None | RepoError
         """
 
         # getting cursor obj
-        cursor = self.create_cursor_obj(self.cnx)
+        cursor = await self.create_cursor_obj(self.cnx)
         try:
-            cursor.execute(query, values)   # replaces %s with actual values
+            await cursor.execute(query, values)   # replaces %s with actual values
             
         except MysqlBaseError as err:
             self.logger.exception("Something in cursor execution went wrong, returning RepoError")
             return self.handle_db_error(err)
         
         finally:
-            self.cnx.commit()
-            cursor.close()
+            await self.cnx.commit()
+            await cursor.close()
 
     def execute_read(self, query, *values) -> list[dict[any]] | RepoError:
         """

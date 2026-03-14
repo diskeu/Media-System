@@ -111,23 +111,23 @@ class BaseRepo():
             await self.cnx.commit()
             await cursor.close()
 
-    def execute_read(self, query, *values) -> list[dict[any]] | RepoError:
+    async def execute_read(self, query, *values) -> list[dict[any]] | RepoError:
         """
         Given a sql select - query and values, executes the query\n
         returns the cursor return in dict format | RepoError
         """
         # getting cursor
-        cursor = self.create_cursor_obj(self.cnx)
+        cursor = await self.create_cursor_obj(self.cnx)
         try:
-            cursor.execute(query, values)
-            rows: dict = cursor.fetchall()
+            await cursor.execute(query, values)
+            rows: dict = await cursor.fetchall()
         except MysqlBaseError as err:
             self.logger.exception(
                 "Something in cursor execution went wrong, returning RepoError"
             )
             return self.handle_db_error(err)
         finally:
-            cursor.close()
+            await cursor.close()
         return rows
 
     def check_pk_val(self, primary_keys: dict) -> None | RepoError:

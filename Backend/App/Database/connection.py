@@ -1,11 +1,18 @@
-import mysql.connector
-from mysql.connector import errorcode
+from mysql.connector.aio import connect as aio_connect
+from mysql.connector.aio.connection import MySQLConnection as aio_MySQLConnection
+
+# Errors
+from mysql.connector import (
+    errorcode,
+    Error as MysqlConnectorError
+)
 from mysql.connector.errors import (
     ProgrammingError,
     DatabaseError
 )
 import logging
-import time
+from utils.type_helpers import to_int
+from asyncio import sleep
 
 # seting up logger
 mysql_connection_logger = logging.getLogger(__name__)
@@ -28,7 +35,7 @@ file_handler.setLevel(logging.WARNING)
 mysql_connection_logger.addHandler(stream_handler)
 mysql_connection_logger.addHandler(file_handler)
 
-def connect(config_file_location: str, user: str | None = None, attempts: int = 1, delay: int = 2) -> mysql.connector.connection_cext.CMySQLConnection | None:
+async def connect(config_file_location: str, user: str | None = None, attempts: int = 1, delay: int = 2) -> aio_MySQLConnection | None:
     """
     ### Given a configuration-file location, returns a mysql connection object ###
 
@@ -37,7 +44,7 @@ def connect(config_file_location: str, user: str | None = None, attempts: int = 
     :param user: If 'user' is provided, it's values will be used; otherwise, DEFAULT will be used.
     :type user: str | None
     :return: returns a mysql connection object
-    :rtype: mysql.connector.connection_cext.CMySQLConnection
+    :rtype: aio_MySQLConnection
     """
     def new_section(line: str, confg_dict: dict, cur_section_name: str) -> bool | None:
         """If the line contains a new section, return True; otherwise, return None and add the values to the section."""
@@ -46,7 +53,7 @@ def connect(config_file_location: str, user: str | None = None, attempts: int = 
         else:
             try:
                 k, v = line.split("=")
-                k, v = k.strip(), v.strip()
+                k, v = to_int(k.strip()), to_int(v.strip())
                 confg_dict[cur_section_name][k] = v
             except ValueError:                      # no key-value couple
                 mysql_connection_logger.exception("Can't unbound line, no key-value couple")
@@ -93,13 +100,13 @@ def connect(config_file_location: str, user: str | None = None, attempts: int = 
     attempt = 1
     while attempt <= attempts:
         try:
-            return mysql.connector.connect(
+            return await aio_connect(
                 connection_timeout=3,
                 read_timeout=8,
                 write_timeout=8,
                 **confg
             )
-        except mysql.connector.Error as err:
+        except MysqlConnectorError as err:
             # Syntacx error
             if isinstance(err, ProgrammingError):
                 print(err)
@@ -119,7 +126,7 @@ def connect(config_file_location: str, user: str | None = None, attempts: int = 
                     return None
                 else:
                     mysql_connection_logger.warning("Attempt (%d/%d) to reconnect, Retrying in %d seconds, Exception: %s", attempt, attempts, attempts**delay, err)
-                    time.sleep(attempts**delay)
+                    await sleep(attempts**delay)
                     attempt += 1
                     continue
 

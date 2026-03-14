@@ -18,3 +18,10 @@ def same_type(*objcts: object) -> bool:
 def convert_to_string(val: any):
     if isinstance(val, str): return val
     return str(val)
+
+def to_int(value, default=None):
+    """if default == None -> return value | int(value)"""
+    try:
+        return int(value)
+    except ValueError:
+        return value

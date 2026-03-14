@@ -165,7 +165,7 @@ class BaseRepo():
         NOTE:
             - In contrast to the normal get_info function it is intended to have acces to other columns via. JOIN.\n
             - It is built for more than one post and the return isn't intendet to be formatted into Models\n
-            - If primary_keys[0] is only 1 value, parse an non-iterable value\n
+            - If prmary_keys[0] is only 1 value, parse an non-iterable value\n
             - values 'll be added in order auto-generated primary key values -> specified values\n
 
         ## joins ##

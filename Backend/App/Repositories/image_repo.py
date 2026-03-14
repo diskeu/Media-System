@@ -14,7 +14,6 @@ class ImageRepo(BaseRepo):
             "messenger.images",
             *models
         )
-    
     def get_images_path(self, image_ids: list[int] | None, post_ids: list[int] | None) -> list[dict[any]] | BaseRepo.RepoError:
         """
         Gets all paths of the images of the specific image_ids\n
@@ -26,8 +25,9 @@ class ImageRepo(BaseRepo):
             "You can only parse image id or post id",
             TypeError("Too many arguments got parsed")
         )
+        self.logger.exception("Too many arguments got parsed")
         return self.get_all_enriched(
-            table="messneger.images",
+            table="messenger.images",
             primary_keys=("image_id", [(image_id, ) for image_id in image_ids]) if image_ids else ("post_id", [(post_id, ) for post_id in post_ids]),
             columns=["image_path"]
         )

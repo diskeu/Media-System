@@ -131,7 +131,7 @@ class BaseRepo():
         return rows
 
     def check_pk_val(self, primary_keys: dict) -> None | RepoError:
-        """Small help func that checks wether the primary keys dict correspond to the right vals and logs the errors, returns None|RepoError"""
+        """Small help func that checks wether the primary keys-dict correspond to [str: int] and logs the errors, returns None|RepoError"""
         for pk_name, pk_id in primary_keys.items():
             if type(pk_name) != str or type(pk_id) != int:
                 self.logger.warning(

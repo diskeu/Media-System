@@ -149,7 +149,7 @@ class BaseRepo():
                         f"given type: [{type(pk_name), ",", type(pk_id)}"
                     )
                 )
-    def get_all_enriched(
+    async def get_all_enriched(
         self,
         table: str,
         primary_keys: tuple[tuple[str, ...] | list[tuple[str, ...]] | any, list[tuple[any, ...]]] | None = None,
@@ -248,7 +248,7 @@ class BaseRepo():
             *columns
         )
         # returns list[dict[any]] | RepoError
-        return self.execute_read(
+        return await self.execute_read(
             select_query,
             *combined_values
         )

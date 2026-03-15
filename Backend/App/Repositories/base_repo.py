@@ -10,6 +10,7 @@ from mysql.connector.errors import (
     ProgrammingError,
     DatabaseError,
     InternalError,
+    DataError,
     Error as MysqlBaseError
 )
 from Backend.App.Exceptions.DB_Exceptions import (
@@ -41,7 +42,8 @@ class BaseRepo():
             7: QuerySyntaxError,
             8: ExistingAttributeError,
             9: TypeError,
-            10: Exception # Any kind of exception
+            10: DataError,
+            11: Exception # Any kind of exception
         }
         def __init__(self, succes: bool, error_code: int, message: str, exception: Exception):
             self.succes = succes
@@ -71,12 +73,16 @@ class BaseRepo():
         elif isinstance(err, OperationalError):
             return self.RepoError(False, 4, "Network / Timeout error", err)
         
+        # DataError -> This exception is raised when there were problems with the data
+        elif isinstance(err, DataError):
+            return self.RepoError(False, 10, "DataError", err)
+        
         # DataBase errors
         elif isinstance(err, DatabaseError):
             return self.RepoError(False, 2, "Other DataBase Error", err)
         
         # Other Errors
-        else: return self.RepoError(False, 10, "Error -> check Exception for more info", err)
+        else: return self.RepoError(False, 11, "Error -> check Exception for more info", err)
 
     async def create_cursor_obj(self, cnx: aio_MySQLConnection, dict_format: bool = True) -> MySQLCursor | RepoError:
         """Given a Connection returns a cursor object or RepoError"""

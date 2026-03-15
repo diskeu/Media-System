@@ -9,7 +9,7 @@ class Comment(BaseModel):
         comment_id: int | DEFAULT,
         comment_creator_id: int,
         post_id: int,
-        parent_comment_id: int | DEFAULT,
+        parent_comment_id: int | DEFAULT | None,
         comment_content: str,
         created_at: datetime | DEFAULT
     ):

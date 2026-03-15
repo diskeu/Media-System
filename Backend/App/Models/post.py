@@ -8,11 +8,11 @@ class Post(BaseModel):
         self,
         post_id: int | DEFAULT,
         post_creator: int,
-        community_id: int | DEFAULT,
-        post_title: str | DEFAULT,
+        community_id: int | DEFAULT | None,
+        post_title: str | DEFAULT | None,
         post_content: str,
         post_score: int | DEFAULT,
-        is_sticky: bool | DEFAULT,
+        is_sticky: bool | DEFAULT, # TODO: add migration so is_sticky is a bool
         created_at: datetime | DEFAULT
     ):
         self.post_id = post_id

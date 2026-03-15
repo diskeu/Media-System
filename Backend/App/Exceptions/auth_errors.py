@@ -7,3 +7,13 @@ class UserNameAlreadyExistsError(BaseException):
     def __init__(self, message = None):
         if not message: message = "User Already Exists"
         super().__init__(message)
+
+class InvalidPasswordError(BaseException):
+    def __init__(self, message = None):
+        if not message: message = "Password should Contain 8 - 20 char, atleast one upper & lower case letter, one number and one special char. Allowed char: A-Za-z\d@$#%"
+        super().__init__(message)
+
+class InvalidEmailError(BaseException):
+    def __init__(self, message = None):
+        if not message: message = "Email is invalid"
+        super().__init__(message)

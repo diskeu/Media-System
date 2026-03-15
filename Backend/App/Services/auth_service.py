@@ -6,15 +6,32 @@ from Backend.App.Repositories.base_repo import BaseRepo
 from utils.sentinel import DEFAULT
 from hashlib import sha256
 from datetime import datetime
-RepoError = BaseRepo.RepoError
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
-    UserNameAlreadyExistsError
+    UserNameAlreadyExistsError,
+    InvalidPasswordError,
+    InvalidEmailError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
+import re
+RepoError = BaseRepo.RepoError
+
 class AuthService():
+    PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*])[A-Za-z\d@$#%]{8, 20}$"
+    EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+    
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
+
+    def validate_password(self, password: str) -> bool:
+        if re.search(AuthService.PASSW_REGEX, password) == None:
+            return False
+        return True
+    
+    def validate_email(self, email: str) -> bool:
+        if re.search(AuthService.EMAIL_REGEX, email) == None:
+            return False
+        return True
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime, rem: bool = False):
         """
@@ -34,13 +51,16 @@ class AuthService():
             birth_date=None,
             last_seen=DEFAULT
         )
-        sucess = await self.user_repo.insert_user(
-            user
-        )
+        if self.validate_password(password) == False:
+            raise InvalidPasswordError() 
+        
+        if self.validate_email(email) == False:
+            raise InvalidEmailError()
+        
+        sucess = await self.user_repo.insert_user(user)
+        
         if isinstance(sucess, RepoError):
             msg = str(sucess.exception)
-            print("_______")
-            print(msg)
             
             # Existing Attribute Error
             if sucess.error_code == 8:

@@ -11,6 +11,7 @@ from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError
 )
+from Backend.App.Exceptions.service_errors import NotNullError
 class AuthService():
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
@@ -30,7 +31,7 @@ class AuthService():
             hashed_password=sha256(password.encode()).hexdigest(),
             email=email,
             created_at=DEFAULT,
-            birth_date=birth_date,
+            birth_date=None,
             last_seen=DEFAULT
         )
         sucess = await self.user_repo.insert_user(
@@ -38,6 +39,8 @@ class AuthService():
         )
         if isinstance(sucess, RepoError):
             msg = str(sucess.exception)
+            print("_______")
+            print(msg)
             
             # Existing Attribute Error
             if sucess.error_code == 8:
@@ -45,8 +48,7 @@ class AuthService():
                     raise EmailAlreadyExistsError()
                 elif "user_name" in msg:
                     raise UserNameAlreadyExistsError()
+                elif "cannot be null" in msg:
+                    raise NotNullError()
                 else:
                     raise RepoError.error_table[8](msg)
-                
-            # DataError
-            if sucess.error_code == 

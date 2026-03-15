@@ -2,9 +2,15 @@
 
 from Backend.App.Repositories.user_repo import UserRepo
 from Backend.App.Models.user import User
+from Backend.App.Repositories.base_repo import BaseRepo
 from utils.sentinel import DEFAULT
 from hashlib import sha256
 from datetime import datetime
+RepoError = BaseRepo.RepoError
+from Backend.App.Exceptions.auth_errors import (
+    EmailAlreadyExistsError,
+    UserNameAlreadyExistsError
+)
 class AuthService():
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
@@ -18,16 +24,29 @@ class AuthService():
         or persistent (invalid after reaching expiry date)
         cookie.
         """
-        print(User.__annotations__)
         user = User(
             user_id=DEFAULT,
             user_name=name,
-            hashed_password=sha256(password),
+            hashed_password=sha256(password.encode()).hexdigest(),
             email=email,
             created_at=DEFAULT,
             birth_date=birth_date,
             last_seen=DEFAULT
         )
-        await self.user_repo.insert_user(
-            
+        sucess = await self.user_repo.insert_user(
+            user
         )
+        if isinstance(sucess, RepoError):
+            msg = str(sucess.exception)
+            
+            # Existing Attribute Error
+            if sucess.error_code == 8:
+                if "email" in msg:
+                    raise EmailAlreadyExistsError()
+                elif "user_name" in msg:
+                    raise UserNameAlreadyExistsError()
+                else:
+                    raise RepoError.error_table[8](msg)
+                
+            # DataError
+            if sucess.error_code == 

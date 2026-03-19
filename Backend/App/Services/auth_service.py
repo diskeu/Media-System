@@ -17,7 +17,7 @@ import re
 RepoError = BaseRepo.RepoError
 
 class AuthService():
-    PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*])[A-Za-z\d@$#%]{8, 20}$"
+    PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*])[A-Za-z\d@$#%]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     
     def __init__(self, user_repo: UserRepo):
@@ -48,7 +48,7 @@ class AuthService():
             hashed_password=sha256(password.encode()).hexdigest(),
             email=email,
             created_at=DEFAULT,
-            birth_date=None,
+            birth_date=birth_date,
             last_seen=DEFAULT
         )
         if self.validate_password(password) == False:
@@ -72,3 +72,20 @@ class AuthService():
                     raise NotNullError()
                 else:
                     raise RepoError.error_table[8](msg)
+                
+        # TODO -> Sending register email
+        #   - find framework to send mails
+        #   - need to keep track of activation codes
+        #   - Need to keep track which Users need email-conformation
+        #       * either register them right away into the DB and limit their actions
+        #           * register them into the DB and having a background job everyday popping the users that took to lon
+        #           * havinsg a async func that keeps track of all users in pending state
+        #               * if the timer reaches it's end the corresponding user 'll get popped
+        #       * having a table for the pending users would eliminate checking if the user is pending
+        #       * or the user doesn't exist in the DB until the email get's confirmed
+
+        # Table with pending users
+        # Background Job runs on the Table popping the users that have a long member since
+        # each time a user sucessfully confirms their email or reach the pending limit they 'll get popped
+        # when someone sends the code back it only works if the user is in the pending table
+        # each registration you need also to look into the pending table to look for unique vals | a correlation between the tables

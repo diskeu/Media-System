@@ -7,11 +7,13 @@ mail_sender = MailSender( # -> Works
 )
 
 # Mail Debug Loop
-import smtplib
+# import smtplib
 
-with smtplib.SMTP("localhost", 1025) as smtp:
-    smtp.sendmail(
-        "from@test.com",
-        "to@test.com",
-        "Subject: Test\n\nHello World!"
-    )
+# with smtplib.SMTP("localhost", 1025) as smtp:
+#     smtp.sendmail(
+#         "from@test.com",
+#         "to@test.com",
+#         "Subject: Test\n\nHello World!"
+#     )
+
+mail_sender.send_mail("Tim", "jelenzt@gmail.com")

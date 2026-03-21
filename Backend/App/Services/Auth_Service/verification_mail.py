@@ -19,7 +19,7 @@ def build_verification_mail(user_name):
                                 <p>
                                     An Media-System account using this email address has been created. 
                                     If this was not you, please contact
-                                    <a href="mailto:support@media_system.com" style="color:#007BFF; text-decoration:none;" target="_blank">support@media_system.com</a>.
+                                    <a href="mailto:marvinmagmud@gmail.com" style="color:#007BFF; text-decoration:none;" target="_blank">support@media_system.com</a>.
                                 </p>
                                 <p>To confirm this was you, please click the button below:</p>
                                 
@@ -34,7 +34,7 @@ def build_verification_mail(user_name):
                                 </p>
 
                                 <p>Best regards,</p>
-                                <p>Media-System.at Team</p>
+                                <p>Media-System</p>
                             </td>
                         </tr>
 
@@ -50,3 +50,4 @@ def build_verification_mail(user_name):
         </table>
     </body>
     """
+    return verification_mail

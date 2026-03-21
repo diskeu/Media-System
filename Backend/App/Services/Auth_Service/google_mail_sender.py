@@ -11,6 +11,7 @@ from googleapiclient import errors
 from googleapiclient.discovery import build
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
 
 class MailSender():
     SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
@@ -68,4 +69,8 @@ class MailSender():
         # writing changes to file
         with open(self.token_f_location, "w") as token_f:
             token_f.write(creds.to_json())
+
+    def send_mail(user_name: str):
+        """Sends Mail using the defined mail in verification_mail.py"""
+        body = build_verification_mail(user_name)
         

@@ -1,6 +1,6 @@
 # Class for the sending of email-authentication-mails to the Client
 import os.path
-import threading
+from concurrent.futures import ThreadPoolExecutor
 from asyncio import get_running_loop
 from base64 import urlsafe_b64encode
 
@@ -103,9 +103,13 @@ class MailSender():
                 body = {"raw": raw}
             ).execute()
         
-    async def send_mail_async(self, user_name: str, user_email: str):
-        """Wrapper for the synchronous _send_mail function. Short Documentation in '_send_mail'."""
-        # Running _send_mail in current event loop
+    async def send_mail_async(self, user_name: str, user_email: str, thread_pool: ThreadPoolExecutor = None):
+        """
+        Wrapper for the synchronous _send_mail function.
+        If thread_pool == None take the default ThreadPool
+        Further Documentation in '_send_mail'.
+        """
+        # Running _send_mail from current event loop
         loop = get_running_loop()
-        future = loop.run_in_executor(None, self._send_mail, user_name, user_email)
+        future = loop.run_in_executor(thread_pool, self._send_mail, user_name, user_email)
         return await future

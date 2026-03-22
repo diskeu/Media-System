@@ -86,6 +86,9 @@ class AuthService():
                 else:
                     raise RepoError.error_table[8](msg)
                 
+        # email verification
+        # keep all active tokens in-memory
+
         # TODO -> Sending register email
         #   - find framework to send mails
         #   - need to keep track of activation codes

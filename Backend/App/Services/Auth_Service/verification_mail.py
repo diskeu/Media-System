@@ -1,4 +1,4 @@
-def build_verification_mail(user_name):    
+def build_verification_mail(user_name, token: str):
     verification_mail = f"""
     <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -25,7 +25,7 @@ def build_verification_mail(user_name):
                                 
                                 <!-- Button -->
                                 <p style="text-align:center; margin:30px 0;">
-                                    <a href="https://deine-seite.com/confirm?token=12345" 
+                                    <a href="https://deine-seite.com/confirm?token={token}" 
                                     style="display:inline-block; padding:14px 28px; font-size:16px; font-weight:bold; color:#ffffff; background-color:#007BFF; text-decoration:none; border-radius:6px; border:1px solid #007BFF;"
                                     target="_blank" 
                                     aria-label="Confirm your email for Media-System">

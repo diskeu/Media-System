@@ -1,11 +1,12 @@
 # Class for the sending of email-authentication-mails to the Client
 import os.path
+import threading
+from asyncio import get_running_loop
 from base64 import urlsafe_b64encode
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient import errors
 from googleapiclient.discovery import build
 from email.message import EmailMessage
 from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
@@ -75,7 +76,7 @@ class MailSender():
         with open(self.token_f_location, "w") as token_f:
             token_f.write(creds.to_json())
 
-    def send_mail(self, user_name: str, user_email: str):
+    def _send_mail(self, user_name: str, user_email: str):
         """Sends Mail using the defined mail in verification_mail.py and returns the api's json return in dict format"""
 
         # getting html
@@ -101,6 +102,10 @@ class MailSender():
                 userId = "me",
                 body = {"raw": raw}
             ).execute()
-            
         
-        
+    async def send_mail_async(self, user_name: str, user_email: str):
+        """Wrapper for the synchronous _send_mail function. Short Documentation in '_send_mail'."""
+        # Running _send_mail in current event loop
+        loop = get_running_loop()
+        future = loop.run_in_executor(None, self._send_mail, user_name, user_email)
+        return await future

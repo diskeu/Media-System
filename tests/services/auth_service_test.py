@@ -1,4 +1,4 @@
-from Backend.App.Services.auth_service import AuthService
+from Backend.App.Services.Auth_Service.auth_service import AuthService
 from Backend.App.Repositories.user_repo import UserRepo
 from Backend.App.logger_config import setup_logger
 from Backend.App.Database.connection import connect
@@ -16,8 +16,8 @@ async def connect_test():
     a_s = AuthService(u_r)
     sucess = await a_s.register(
         name="dsadssa",
-        email="dsa",
-        password="dsadasd",
+        email="jelenzt@gmail.com",
+        password="0z7ZBu2Bg!J9",
         birth_date=datetime.now(),
     )
 

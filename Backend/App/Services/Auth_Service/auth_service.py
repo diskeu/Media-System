@@ -17,19 +17,21 @@ import re
 RepoError = BaseRepo.RepoError
 
 class AuthService():
-    PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*])[A-Za-z\d@$#%]{8,20}$"
+    PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*!?])[A-Za-z\d@$#%*!?]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     
     def __init__(self, user_repo: UserRepo):
         self.user_repo = user_repo
 
     def validate_password(self, password: str) -> bool:
-        if re.search(AuthService.PASSW_REGEX, password) == None:
+        flag = re.search(AuthService.PASSW_REGEX, password)
+        if isinstance(flag, re.Match) == False:
             return False
         return True
     
     def validate_email(self, email: str) -> bool:
-        if re.search(AuthService.EMAIL_REGEX, email) == None:
+        flag = re.search(AuthService.EMAIL_REGEX, email)
+        if isinstance(flag, re.Match) == False:
             return False
         return True
 
@@ -41,7 +43,24 @@ class AuthService():
         a session (invalid after closing of the browser)
         or persistent (invalid after reaching expiry date)
         cookie.
+
+        Raises: (
+            InvalidPasswordError,
+            InvalidEmailError, 
+            EmailAlreadyExistsError, 
+            UserNameAlreadyExistsError,
+            NotNullError,
+            RepoError
+        )
         """
+        # Validation-code should be sent via javascript
+        # Validation in Backend is still necessary
+        p_flag = self.validate_password(password)
+        if p_flag != True: raise InvalidPasswordError() 
+
+        e_flag = self.validate_email(email)
+        if e_flag != True: raise InvalidEmailError()
+        
         user = User(
             user_id=DEFAULT,
             user_name=name,
@@ -51,12 +70,6 @@ class AuthService():
             birth_date=birth_date,
             last_seen=DEFAULT
         )
-        if self.validate_password(password) == False:
-            raise InvalidPasswordError() 
-        
-        if self.validate_email(email) == False:
-            raise InvalidEmailError()
-        
         sucess = await self.user_repo.insert_user(user)
         
         if isinstance(sucess, RepoError):

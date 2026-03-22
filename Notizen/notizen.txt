@@ -301,3 +301,28 @@ c_m = CommunityMember(1, 1002, "member", -1)
 # c_r.update_community_member_role(1, 1002, "moderator")
 print(c_r.get_all("messenger.community_members"))
 print(c_r.get_member_info(1, 1002).role)
+__________________________________________________________________________________________________________________________________________________________________
+Threads
+
+Threads kann synchrone task ausführen. Durch das GIL (Global Interpreter Lock) gibt es kein wirkliches multiprocessing und nicht gut für recheninsive Tasks
+threading.Thread werden vom OS ausgeführt und OS entscheidet wann es den Thread bei I/O operationen blockiert -> präemptives Multitasking
+Beim Eventloop steuert python wann etwas ausgeführt wird nicht das OS -> tasks müssen freiwillig sagen ich warte auf I/O -> kooperatives Multitasking 
+Man kann einen Thread im Eventloop starten aber er läuft dann trotzdem ncith im EventLoop, aber der EventLoop startet und wartet auf ihn und der Eventloop bekommt auch das ergebniss zurück
+Obwohl der EventLoop Thread startet - stoppt wird er trotzdem vom OS ausgeführt
+Event Loop (Hauptthread)
+ ├── async Task A
+ ├── async Task B ──┐
+ │                  │ await run_in_executor
+ │                  ▼
+ │           ThreadPool
+ │            ├── Thread 1 → func(arg)
+ │            ├── Thread 2
+ │            └── Thread 3
+ │
+ ├── async Task C läuft weiter
+ └── wartet NICHT!
+
+Ohne Threadpool müsste man jedesmal neuen Thread erstellen
+mit Threadpool -> Threads werden wieder verwendet
+Threadpool gehört zu python. Die Threads selbst gehören aber zu dem OS
+wenn python sagt "Erstelle einen Thread" -> ruft es intern systemaufrufe vom OS auf

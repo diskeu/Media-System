@@ -1,11 +1,15 @@
 # AUTHENTICATION - Service
 
-from Backend.App.Repositories.user_repo import UserRepo
-from Backend.App.Models.user import User
+# ___________type annotations___________
+from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
+from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 from Backend.App.Repositories.base_repo import BaseRepo
+from Backend.App.Repositories.user_repo import UserRepo
 from utils.sentinel import DEFAULT
-from hashlib import sha256
 from datetime import datetime
+# ______________________________________
+from Backend.App.Models.user import User
+from hashlib import sha256
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError,
@@ -17,11 +21,22 @@ import re
 RepoError = BaseRepo.RepoError
 
 class AuthService():
+    """Class for authenticating users"""
     PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*!?])[A-Za-z\d@$#%*!?]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     
-    def __init__(self, user_repo: UserRepo):
+    def __init__(self, user_repo: UserRepo, verification_tokens_c: VerificationTokens, mail_sender: MailSender, thread_pool = None):
+        """
+        Param:
+            user_repo: UserRepo that should be used
+            verification_tokens_c: a VerificationTokens - Class to avoid creating new ones
+            mail_sender: MailSender class for sending verification tokens
+            thread_pool: If None use the standart ThreadPool
+        """
         self.user_repo = user_repo
+        self.verification_tokens_c = verification_tokens_c
+        self.mail_sender = mail_sender
+        self.thread_pool = thread_pool
 
     def validate_password(self, password: str) -> bool:
         flag = re.search(AuthService.PASSW_REGEX, password)
@@ -70,24 +85,16 @@ class AuthService():
             birth_date=birth_date,
             last_seen=DEFAULT
         )
-        sucess = await self.user_repo.insert_user(user)
-        
-        if isinstance(sucess, RepoError):
-            msg = str(sucess.exception)
-            
-            # Existing Attribute Error
-            if sucess.error_code == 8:
-                if "email" in msg:
-                    raise EmailAlreadyExistsError()
-                elif "user_name" in msg:
-                    raise UserNameAlreadyExistsError()
-                elif "cannot be null" in msg:
-                    raise NotNullError()
-                else:
-                    raise RepoError.error_table[8](msg)
                 
         # email verification
         # keep all active tokens in-memory
+        token = self.verification_tokens_c.generate_token(user)
+        await self.mail_sender.send_mail_async(
+            user.user_name,
+            user.email,
+            verification_token=token,
+            thread_pool=self.thread_pool
+        )
 
         # TODO -> Sending register email
         #   - find framework to send mails
@@ -105,3 +112,27 @@ class AuthService():
         # each time a user sucessfully confirms their email or reach the pending limit they 'll get popped
         # when someone sends the code back it only works if the user is in the pending table
         # each registration you need also to look into the pending table to look for unique vals | a correlation between the tables
+
+    async def validate_token(self, token: str) -> bool: # TODO: Add rem / nrem token after sucessfull acc creation
+        """
+        Wrapper for verification_tokens.validate_token.
+        If the corresponding Token is valid, insert it into the DB.
+        """
+        user_m = self.verification_tokens_c.validate_token(token)
+        if user_m == False: return False
+
+        sucess = await self.user_repo.insert_user(user_m)
+        
+        if isinstance(sucess, RepoError):
+            msg = str(sucess.exception)
+            
+            # Existing Attribute Error
+            if sucess.error_code == 8:
+                if "email" in msg:
+                    raise EmailAlreadyExistsError()
+                elif "user_name" in msg:
+                    raise UserNameAlreadyExistsError()
+                elif "cannot be null" in msg:
+                    raise NotNullError()
+                else:
+                    raise RepoError.error_table[8](msg)

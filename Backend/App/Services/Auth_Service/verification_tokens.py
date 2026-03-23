@@ -1,4 +1,5 @@
 # class for verification-tokens
+from Backend.App.Models.user import User
 from hashlib import sha256
 from datetime import datetime
 from asyncio import sleep
@@ -15,27 +16,30 @@ class VerificationTokens():
         """Removes every expired Token in the token_dict"""
         while True:
             await sleep(intervall)
-            for k, created_at in list(self.token_dict.items()):
+            for k, _, created_at in list(self.token_dict.items()):
                 delta = datetime.now() - created_at
                 if delta.total_seconds() > self.token_expiry_time:
                     self.token_dict.pop(k)
         
-    def generate_token(self, user_name: str) -> str:
+    def generate_token(self, user_m: User) -> str:
         now = datetime.now()
-        data = (str(now) + user_name).encode()
+        data = (str(now) + user_m.user_name).encode()
 
-        token = sha256(
+        token_hx = sha256(
             data=data,
             usedforsecurity=True
-        )
-        self.token_dict[token.hexdigest()] = now
+        ).hexdigest()
+        
+        self.token_dict[token_hx] = user_m, now
+        return token_hx
     
     def validate_token(self, token) -> bool:
-        """Checks if token is in the dict -> pops the token if True"""
-        val: datetime = self.token_dict.get(token, None)
+        """Checks if token is in the dict -> pops the token if True and returns the User Model"""
+        print(self.token_dict)
+        user_m, val = self.token_dict.get(token, (None, None))
         if val:
             self.token_dict.pop(token)
             delta = datetime.now() - val
             if delta.total_seconds() <= self.token_expiry_time:
-                return True
+                return user_m
         return False

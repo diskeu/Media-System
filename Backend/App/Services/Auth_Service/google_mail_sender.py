@@ -76,11 +76,11 @@ class MailSender():
         with open(self.token_f_location, "w") as token_f:
             token_f.write(creds.to_json())
 
-    def _send_mail(self, user_name: str, user_email: str):
+    def _send_mail(self, user_name: str, user_email: str, verification_token: str):
         """Sends Mail using the defined mail in verification_mail.py and returns the api's json return in dict format"""
 
         # getting html
-        body = build_verification_mail(user_name)
+        body = build_verification_mail(user_name, verification_token)
         
         # Building msg
         msg = EmailMessage()
@@ -103,13 +103,19 @@ class MailSender():
                 body = {"raw": raw}
             ).execute()
         
-    async def send_mail_async(self, user_name: str, user_email: str, thread_pool: ThreadPoolExecutor = None):
+    async def send_mail_async(self, user_name: str, user_email: str, verification_token: str, thread_pool: ThreadPoolExecutor = None):
         """
         Wrapper for the synchronous _send_mail function.
-        If thread_pool == None take the default ThreadPool
+        If thread_pool == None take the default ThreadPool.
         Further Documentation in '_send_mail'.
         """
         # Running _send_mail from current event loop
         loop = get_running_loop()
-        future = loop.run_in_executor(thread_pool, self._send_mail, user_name, user_email)
+        future = loop.run_in_executor(
+            thread_pool,
+            self._send_mail,
+            user_name,
+            user_email,
+            verification_token
+        )
         return await future

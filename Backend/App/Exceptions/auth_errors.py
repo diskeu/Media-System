@@ -13,3 +13,7 @@ class InvalidPasswordError(BaseException):
 class InvalidEmailError(BaseException):
     def __init__(self, message = "Email is invalid"):
         super().__init__(message)
+
+class InvalidEmailVerficationTokenError(BaseException):
+    def __init__(self, message = "Registration Token is invalid or expired"):
+        super().__init__(message)

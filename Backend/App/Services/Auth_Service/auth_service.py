@@ -14,7 +14,8 @@ from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError,
     InvalidPasswordError,
-    InvalidEmailError
+    InvalidEmailError,
+    InvalidEmailVerficationTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 import re
@@ -96,13 +97,15 @@ class AuthService():
             thread_pool=self.thread_pool
         )
 
-    async def validate_token(self, token: str) -> bool: # TODO: Add rem / nrem token after sucessfull acc creation
+    async def validate_token(self, token: str): # TODO: Add rem / nrem token after sucessfull acc creation
         """
         Wrapper for verification_tokens.validate_token.
         If the corresponding Token is valid, insert it into the DB.
+        Raises:
+            InvalidEmailVerficationToken if the token is not valid
         """
         user_m = self.verification_tokens_c.validate_token(token)
-        if user_m == False: return False
+        if user_m == False: raise InvalidEmailVerficationTokenError
 
         sucess = await self.user_repo.insert_user(user_m)
         

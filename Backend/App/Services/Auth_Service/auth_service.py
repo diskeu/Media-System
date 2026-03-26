@@ -9,7 +9,7 @@ from utils.sentinel import DEFAULT
 from datetime import datetime
 # ______________________________________
 from Backend.App.Models.user import User
-from hashlib import sha256
+from hashlib import sha256, sha512
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError,
@@ -18,6 +18,8 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidEmailVerficationTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
+import random
+import string
 import re
 RepoError = BaseRepo.RepoError
 
@@ -50,15 +52,28 @@ class AuthService():
         if isinstance(flag, re.Match) == False:
             return False
         return True
+    
+    async def _generate_refresh_token(self,) -> str:
+        """
+        Generates a 24 digit token and inserts it's hash into the DB
+        """
+        # generating token
+        token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=24))
 
-    async def register(self, name: str, email: str, password: str, birth_date: datetime, rem: bool = False):
+        # hashing the token
+        token_h = sha512(
+            token, usedforsecurity=True
+        ).digest()
+
+        # TODO: insert the hash into the DB
+
+        # ...
+
+        return token
+
+    async def register(self, name: str, email: str, password: str, birth_date: datetime):
         """
         Create a new Account.
-
-        'rem' indicates wheter the cookie should be
-        a session (invalid after closing of the browser)
-        or persistent (invalid after reaching expiry date)
-        cookie.
 
         Raises: (
             InvalidPasswordError,

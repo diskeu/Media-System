@@ -3,12 +3,14 @@
 # ___________type annotations___________
 from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
 from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
+from Backend.App.Repositories.token_repo import RefreshTokenRepo
 from Backend.App.Repositories.base_repo import BaseRepo
 from Backend.App.Repositories.user_repo import UserRepo
 from utils.sentinel import DEFAULT
 from datetime import datetime
 # ______________________________________
 from Backend.App.Models.user import User
+from Backend.App.Models.refresh_token import RefreshToken
 from hashlib import sha256, sha512
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
@@ -28,7 +30,14 @@ class AuthService():
     PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*!?])[A-Za-z\d@$#%*!?]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
     
-    def __init__(self, user_repo: UserRepo, verification_tokens_c: VerificationTokens, mail_sender: MailSender, thread_pool = None):
+    def __init__(
+            self,
+            user_repo: UserRepo,
+            refresh_token_repo: RefreshTokenRepo,
+            verification_tokens_c: VerificationTokens,
+            mail_sender: MailSender,
+            thread_pool = None
+        ):
         """
         Param:
             user_repo: UserRepo that should be used
@@ -38,6 +47,7 @@ class AuthService():
         """
         self.user_repo = user_repo
         self.verification_tokens_c = verification_tokens_c
+        self.refresh_token_repo = refresh_token_repo
         self.mail_sender = mail_sender
         self.thread_pool = thread_pool
 
@@ -53,7 +63,7 @@ class AuthService():
             return False
         return True
     
-    async def _generate_refresh_token(self,) -> str:
+    async def _generate_refresh_token(self, user_id: int) -> bytes:
         """
         Generates a 24 digit token and inserts it's hash into the DB
         """
@@ -65,11 +75,19 @@ class AuthService():
             token, usedforsecurity=True
         ).digest()
 
-        # TODO: insert the hash into the DB
-
-        # ...
-
-        return token
+        # defining model
+        refresh_token_m = RefreshToken(
+            token_id=DEFAULT,
+            user_id=user_id,
+            token_hash=token_h,
+            created_at=DEFAULT,
+            t_expiry_date=None, # Trigger
+            revoked_at=None,
+            replaced_by=None
+        )
+        self.refresh_token_repo.insert_token_model(refresh_token_m)
+        
+        return token_h
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime):
         """

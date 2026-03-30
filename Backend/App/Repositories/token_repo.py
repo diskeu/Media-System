@@ -45,7 +45,16 @@ class RefreshTokenRepo(BaseRepo):
                 "IF(replaced_by IS NOT NULL, TRUE, FALSE) AS outdated_token_use"
             )
         )
-    # TODO: add func to invalidate all tokens from a client
+    async def invalid_all_refresh_tokens(self, user_id: int) -> None | BaseRepo.RepoError:
+        """
+        Invalidates all refresh tokens from a client.
+        Client needs to log in again
+        """
+        delete_query = self.build_delete_query(
+            "messenger.refresh_tokens",
+            "WHERE user_id = %s"
+        )
+        return await self.execute_write(delete_query, (user_id, ))
     
     async def token_rotation(self, model: RefreshToken, new_token_hash: bytes) -> None | BaseRepo.RepoError:
         """

@@ -25,7 +25,7 @@ async def connect_test():
         birth_date=datetime.now(),
     )
     for token in v_t.token_dict: token = token
-    print(await a_s.validate_token(token))
+    print(await a_s.validate_email_token(token))
 
 asyncio.run(connect_test())
 
@@ -35,5 +35,5 @@ verification_tokens = VerificationTokens(3)
 # verification_tokens.generate_token()
 time.sleep(4)
 for token in verification_tokens.token_dict: token = token
-# print(verification_tokens.validate_token(token))
+# print(verification_tokens.validate_email_token(token))
 # asyncio.run(verification_tokens.token_tracker(2))

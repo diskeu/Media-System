@@ -112,7 +112,7 @@ class AuthService():
             thread_pool=self.thread_pool
         )
 
-    async def validate_token(self, token: str): # TODO: Add rem / nrem token after sucessfull acc creation
+    async def validate_email_token(self, token: str):
         """
         Wrapper for verification_tokens.validate_token.
         If the corresponding Token is valid, insert it into the DB.

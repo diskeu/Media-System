@@ -26,6 +26,7 @@ class RefreshTokenRepo(BaseRepo):
             columns=(
                 """
                 token_hash,
+                created_at,
                 IF(TIMESTAMPDIFF(MINUTE, NOW(), expires_at) > 0, FALSE, TRUE) AS expired,
                 IF(revoked_by_token_id IS NOT NULL, TRUE, FALSE) AS outdated_token_use
                 """
@@ -53,7 +54,7 @@ class RefreshTokenRepo(BaseRepo):
 
         @return_when_error(BaseRepo.RepoError)
         async def insert_token_model():
-            return await self.insert_token_model(token_model)
+            return await self.post_model(token_model)
 
         @return_when_error(BaseRepo.RepoError)
         async def update_old_token():

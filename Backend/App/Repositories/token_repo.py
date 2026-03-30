@@ -3,7 +3,7 @@ from __future__ import annotations
 from Backend.App.Models.refresh_token import RefreshToken
 from Backend.App.Repositories.base_repo import BaseRepo
 from utils.sentinel import DEFAULT
-from utils.error_helpers import return_when_error
+from datetime import datetime
 
 class RefreshTokenRepo(BaseRepo):
     def __init__(self, logger, cnx):
@@ -11,38 +11,65 @@ class RefreshTokenRepo(BaseRepo):
         self.logger = logger
         self.cnx = cnx
 
-    async def insert_token_model(self, *models: RefreshToken) -> None | BaseRepo.RepoError:
+    async def insert_token_model(self, *models: RefreshToken) -> int | BaseRepo.RepoError:
+        """
+        Inserts mostly happen when the client needs a new acces token
+        and the server gives back new Acces Token & new Refresh Token
+        because the refresh token is outdated.
+
+        Returns the LAST_INSERT_ID | RepoError
+        """
         return await self.post_model( # -> None | RepoError
             "messenger.refresh_tokens",
-            *models
+            *models,
+
+            return_last_inserted_id=True
         )
     
-    async def validate_token_hashes(self, token_hash: list[bytes]) -> dict[str: list] | BaseRepo.RepoError:
-        """Returns {token_hash: expired: bool}"""
+    async def validate_token_hashes(self, token_hash: list[bytes]) -> list[dict] | BaseRepo.RepoError:
+        """
+        Returns
+        [{token_h1:, created_at:, token_id:, expired:, outdated_token_use:}, {...}]
+        """
 
+        # If the refresh token is invalid,
+        # the client should get a 403 status code,
+        # with an login again page
         return await self.get_all_enriched(
             table="messenger.refresh_tokens",
-            primary_keys=("refresh_token_hash_p", (token_h,) for token_h in token_hash),
+            primary_keys=("token_hash", [(token_h,) for token_h in token_hash]),
             columns=(
-                """
-                token_hash,
-                created_at,
-                IF(TIMESTAMPDIFF(MINUTE, NOW(), expires_at) > 0, FALSE, TRUE) AS expired,
-                IF(revoked_by_token_id IS NOT NULL, TRUE, FALSE) AS outdated_token_use
-                """
+                "token_hash",
+                "created_at",
+                "IF(TIMESTAMPDIFF(MINUTE, NOW(), t_expiry_date) > 0, FALSE, TRUE) AS expired",
+                "IF(replaced_by IS NOT NULL, TRUE, FALSE) AS outdated_token_use"
             )
         )
+    # TODO: add func to invalidate all tokens from a client
     
     async def token_rotation(self, model: RefreshToken, new_token_hash: bytes) -> None | BaseRepo.RepoError:
         """
-        Makes new token to replace the old one
+        Makes new token to replace the old one.
+        Happens when validate_token_hashes returns an outdated val.
         Returns when an error occures
         """
+        if isinstance(model.token_id, DEFAULT):
+            self.logger.exception(
+                "token_id must be replaced by the actual token_id"
+            )
+            return self.RepoError(
+                succes=False,
+                error_code=9,
+                message="token_id cannot be DEFAULT",
+                exception=TypeError
+            )
+        # Building new token model
         token_model = RefreshToken(
             token_id=DEFAULT,
             user_id=model.user_id,
             token_hash=new_token_hash,
-            expires_at=None, # Trigger
+            created_at=DEFAULT,
+            t_expiry_date=None, # Trigger
             revoked_at=None,
             replaced_by=None
         )
@@ -66,8 +93,8 @@ class RefreshTokenRepo(BaseRepo):
                 table="messenger.refresh_tokens",
                 update_val={
                     "replaced_by": return_val,  # id of the new token
-                    "revoked_at": "CURRENT_TIMESTAMP()"
+                    "revoked_at": datetime.now()
                 },
-                other_statement=f"WHERE token_id = {token_model.token_id}"
+                other_statement=f"WHERE token_id = {model.token_id}"
             )
         return await self.execute_write(update_query, *vals)

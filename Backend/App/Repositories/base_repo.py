@@ -103,14 +103,14 @@ class BaseRepo():
         Given a sql insert/update/delete - query and values, executes the query\n
         returns None | RepoError
         """
-        last_insert_id = None
 
         # getting cursor obj
         cursor = await self.create_cursor_obj(self.cnx)
         try:
             await cursor.execute(query, values)   # replaces %s with actual values
             if last_insert_id:
-                last_insert_id = await cursor.lastrowid
+                last_insert_id = cursor.lastrowid
+            else: last_insert_id = None
             
         except MysqlBaseError as err:
             self.logger.exception("Something in cursor execution went wrong, returning RepoError")
@@ -297,7 +297,7 @@ class BaseRepo():
         info_model: Model = self.create_model(info, model)
         return info_model # returning model or RepoError
     
-    async def post_model(self, table: str, *models: Model, return_last_inserted_id: bool) -> None | BaseRepo.RepoError | int:
+    async def post_model(self, table: str, *models: Model, return_last_inserted_id: bool=False) -> None | BaseRepo.RepoError | int:
         """
         Given instances of the same model class, creates a db entry with the specified propertys from the user model\n
         Note: The models must have one primary key\n

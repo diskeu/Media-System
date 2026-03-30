@@ -98,16 +98,19 @@ class BaseRepo():
                 "Network / Timeout error",
                 err
         )
-    async def execute_write(self, query: str, *values) -> None | RepoError:
+    async def execute_write(self, query: str, *values, last_insert_id: bool = False) -> None | RepoError | int:
         """
         Given a sql insert/update/delete - query and values, executes the query\n
         returns None | RepoError
         """
+        last_insert_id = None
 
         # getting cursor obj
         cursor = await self.create_cursor_obj(self.cnx)
         try:
             await cursor.execute(query, values)   # replaces %s with actual values
+            if last_insert_id:
+                last_insert_id = await cursor.lastrowid
             
         except MysqlBaseError as err:
             self.logger.exception("Something in cursor execution went wrong, returning RepoError")
@@ -117,6 +120,8 @@ class BaseRepo():
             await self.cnx.commit()
             await cursor.close()
 
+        return last_insert_id
+        
     async def execute_read(self, query, *values) -> list[dict[any]] | RepoError:
         """
         Given a sql select - query and values, executes the query\n
@@ -292,7 +297,7 @@ class BaseRepo():
         info_model: Model = self.create_model(info, model)
         return info_model # returning model or RepoError
     
-    async def post_model(self, table: str, *models: Model) -> None | BaseRepo.RepoError:
+    async def post_model(self, table: str, *models: Model, return_last_inserted_id: bool) -> None | BaseRepo.RepoError | int:
         """
         Given instances of the same model class, creates a db entry with the specified propertys from the user model\n
         Note: The models must have one primary key\n
@@ -315,7 +320,9 @@ class BaseRepo():
         insert_query, insert_val = self.build_insert_query(table, columns, values)
 
         # executing query
-        return await self.execute_write(insert_query, *insert_val) # returns None | RepoError
+        if return_last_inserted_id:
+            return await self.execute_write(insert_query, *insert_val, last_insert_id=True) # returns int | RepoError
+        return await self.execute_write(insert_query, *insert_val)                          # returns None | RepoError
 
     def build_select_query(self, table: str, other_statement: str = "", *columns: str) -> str:
         """

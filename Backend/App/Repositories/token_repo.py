@@ -33,7 +33,7 @@ class RefreshTokenRepo(BaseRepo):
             )
         )
     
-    async def token_update(self, model: RefreshToken, new_token_hash: bytes) -> bytes:
+    async def token_rotation(self, model: RefreshToken, new_token_hash: bytes) -> None | BaseRepo.RepoError:
         """
         Makes new token to replace the old one
         Returns when an error occures
@@ -51,27 +51,23 @@ class RefreshTokenRepo(BaseRepo):
         # updating of the old token occures, there is no reference #
         # to a non-existing attribute.                             #
         ############################################################
+        
+        # call func to post the new token
+        return_val = await self.post_model(
+                "messenger.refresh_tokens",
+                token_model,
+                return_last_inserted_id=True
+            )
+        if isinstance(return_val, self.RepoError): return return_val
 
-        @return_when_error(BaseRepo.RepoError)
-        async def insert_token_model():
-            return await self.post_model(token_model)
-
-        @return_when_error(BaseRepo.RepoError)
-        async def update_old_token():
-            update_query, vals = self.build_update_query(
+        # return val is last_insert_id
+        # call func to update the old token
+        update_query, vals = self.build_update_query(
                 table="messenger.refresh_tokens",
-                update_val={"replaced_by": token_model.token_id, "revoked_at": DEFAULT},
+                update_val={
+                    "replaced_by": return_val,  # id of the new token
+                    "revoked_at": "CURRENT_TIMESTAMP()"
+                },
                 other_statement=f"WHERE token_id = {token_model.token_id}"
             )
-            return await self.execute_write(update_query, *vals)
-        
-        if await insert_token_model(): return
-        if await update_old_token(): return
-
-        # TODO
-        # Update the Whole refresh token table
-        #   * update the triggers outdated name
-        #   * maybe make token_id to be primary and Index on token_hash
-        # make revoked at defaults value to be CURRENT_TIMESTAMP()
-        # make the table name to a class attribute
-        # get the last inserted value
+        return await self.execute_write(update_query, *vals)

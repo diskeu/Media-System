@@ -54,7 +54,7 @@ class RefreshTokenRepo(BaseRepo):
             "messenger.refresh_tokens",
             "WHERE user_id = %s"
         )
-        return await self.execute_write(delete_query, (user_id, ))
+        return await self.execute_write(delete_query, user_id)
     
     async def token_rotation(self, model: RefreshToken, new_token_hash: bytes) -> None | BaseRepo.RepoError:
         """

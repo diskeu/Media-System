@@ -25,9 +25,11 @@ async def main_test():
         revoked_at=None,
         replaced_by=None
     )
-    refresh_token_model.token_id = await refresh_token_r.insert_token_model(refresh_token_model)
-    return_val = await refresh_token_r.validate_token_hashes([refresh_token_model.token_hash, sha512("123212".encode(), usedforsecurity=True).digest()])
-    await refresh_token_r.token_rotation(refresh_token_model, new_token_hash=sha512("31212".encode(), usedforsecurity=True).digest())
+    # vvvvvvvvvv Test Functions vvvvvvvvvv
+    # refresh_token_model.token_id = await refresh_token_r.insert_token_model(refresh_token_model)
+    # return_val = await refresh_token_r.validate_token_hashes([refresh_token_model.token_hash, sha512("123212".encode(), usedforsecurity=True).digest()])
+    # await refresh_token_r.token_rotation(refresh_token_model, new_token_hash=sha512("31212".encode(), usedforsecurity=True).digest())
+    await refresh_token_r.invalid_all_refresh_tokens(1002)
 
 asyncio.run(main_test())
 # Test case 1: 1 hash

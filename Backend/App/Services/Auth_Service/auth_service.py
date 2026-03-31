@@ -7,10 +7,14 @@ from Backend.App.Repositories.token_repo import RefreshTokenRepo
 from Backend.App.Repositories.base_repo import BaseRepo
 from Backend.App.Repositories.user_repo import UserRepo
 from utils.sentinel import DEFAULT
-# ______________________________________
+# ______________Models__________________
 from Backend.App.Models.user import User
 from Backend.App.Models.refresh_token import RefreshToken
+# _____Hashing / (en/de)coding etc._____
 from hashlib import sha256, sha512
+from base64 import urlsafe_b64encode
+from hmac import digest as hmac_digest
+# _______________Exceptions_____________
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError,
@@ -19,11 +23,11 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidEmailVerficationTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
+# ______________________________________
 from datetime import datetime, time
 import random
 import string
 import re
-from base64 import urlsafe_b64encode
 RepoError = BaseRepo.RepoError
 
 class AuthService():
@@ -37,7 +41,7 @@ class AuthService():
             refresh_token_repo: RefreshTokenRepo,
             verification_tokens_c: VerificationTokens,
             mail_sender: MailSender,
-            SECRET: str,
+            SECRET: bytes,
             ISSUER: str,
             JWT_EXP_TIME: time,
             thread_pool = None,
@@ -96,7 +100,7 @@ class AuthService():
 
         return token_h
 
-    async def _generate_jwt(
+    def _generate_jwt(
             self,
             user_id: int,
             user_name: str,
@@ -118,7 +122,18 @@ class AuthService():
             "alg": "HS256",
             "typ": "jwt"
         }
-        data = urlsafe_b64encode(header) + "." + urlsafe_b64encode(payload)
+        urlsafe_b64_header = urlsafe_b64encode(header)
+        urlsafe_b64_payload = urlsafe_b64encode(payload)
+
+        data = urlsafe_b64_header + b"." + urlsafe_b64_payload
+
+        sign = hmac_digest(
+            key=self.SECRET,
+            msg=data,
+            digest="sha256"
+        )
+        jwt = urlsafe_b64_header + b"." + urlsafe_b64_payload + b"." + urlsafe_b64encode(sign)
+        return jwt.decode()
         
     async def refresh(self, refresh_token: bytes) -> bytes: ...
 

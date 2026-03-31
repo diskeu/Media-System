@@ -7,7 +7,6 @@ from Backend.App.Repositories.token_repo import RefreshTokenRepo
 from Backend.App.Repositories.base_repo import BaseRepo
 from Backend.App.Repositories.user_repo import UserRepo
 from utils.sentinel import DEFAULT
-from datetime import datetime
 # ______________________________________
 from Backend.App.Models.user import User
 from Backend.App.Models.refresh_token import RefreshToken
@@ -20,9 +19,11 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidEmailVerficationTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
+from datetime import datetime, time
 import random
 import string
 import re
+from base64 import urlsafe_b64encode
 RepoError = BaseRepo.RepoError
 
 class AuthService():
@@ -36,7 +37,10 @@ class AuthService():
             refresh_token_repo: RefreshTokenRepo,
             verification_tokens_c: VerificationTokens,
             mail_sender: MailSender,
-            thread_pool = None
+            SECRET: str,
+            ISSUER: str,
+            JWT_EXP_TIME: time,
+            thread_pool = None,
         ):
         """
         Param:
@@ -49,6 +53,9 @@ class AuthService():
         self.verification_tokens_c = verification_tokens_c
         self.refresh_token_repo = refresh_token_repo
         self.mail_sender = mail_sender
+        self.SECRET = SECRET
+        self.ISSUER = ISSUER
+        self.JWT_EXP_TIME = JWT_EXP_TIME
         self.thread_pool = thread_pool
 
     def validate_password(self, password: str) -> bool:
@@ -86,8 +93,34 @@ class AuthService():
             replaced_by=None
         )
         self.refresh_token_repo.insert_token_model(refresh_token_m)
-        
+
         return token_h
+
+    async def _generate_jwt(
+            self,
+            user_id: int,
+            user_name: str,
+            email: str,
+            user_creation: datetime,
+            birthdate: datetime
+        ):
+        payload = {
+            "iss": self.ISSUER,
+            "sub": user_id,
+            "exp": datetime.combine(datetime.now(), self.JWT_EXP_TIME).timestamp(),
+            "iat": datetime.now().timestamp(),
+            "user_name": user_name,
+            "email": email,
+            "user_creation": user_creation,
+            "birthdate": birthdate
+        }
+        header = {
+            "alg": "HS256",
+            "typ": "jwt"
+        }
+        data = urlsafe_b64encode(header) + "." + urlsafe_b64encode(payload)
+        
+    async def refresh(self, refresh_token: bytes) -> bytes: ...
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime):
         """

@@ -35,7 +35,6 @@ class VerificationTokens():
     
     def validate_token(self, token) -> bool:
         """Checks if token is in the dict -> pops the token if True and returns the User Model"""
-        print(self.token_dict)
         user_m, val = self.token_dict.get(token, (None, None))
         if val:
             self.token_dict.pop(token)

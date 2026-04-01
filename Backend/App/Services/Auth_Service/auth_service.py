@@ -184,6 +184,8 @@ class AuthService():
         except JSONDecodeError:
             return False
         
+        if payload_dict["exp"] - payload_dict["iat"] <= 0: return False
+
         # format non-serializable json-formats
         try:
             payload_dict["birthdate"] = datetime.strptime(payload_dict["birthdate"], '%Y-%m-%d')
@@ -278,14 +280,15 @@ class AuthService():
             thread_pool=self.thread_pool
         )
 
-    async def validate_email_token(self, token: str) -> bytes | RepoError:
+    async def validate_email_token(self, token: str) -> tuple[bytes, bytes] | RepoError:
         """
         Wrapper for verification_tokens.validate_token.
-        If the corresponding Token is valid, insert the user into the DB.
+        If the corresponding Token is valid, insert the user into the DB
+        and return (refresh_token, jwt)
         Raises:
             InvalidEmailVerficationToken if the token is not valid
         """
-        user_m = self.verification_tokens_c.validate_token(token)
+        user_m: User = self.verification_tokens_c.validate_token(token)
         if user_m == False: raise InvalidEmailVerficationTokenError
 
         sucess = await self.user_repo.insert_user(user_m)
@@ -304,3 +307,13 @@ class AuthService():
                 else:
                     raise RepoError.error_table[8](msg)
             raise sucess
+        jwt = self._generate_jwt(
+            user_m.user_id,
+            user_m.user_name,
+            user_m.email,
+            user_m.created_at,
+            user_m.birth_date
+        )
+        refresh_token_hash = self._generate_refresh_token(user_m.user_id).token_hash
+
+        return (refresh_token_hash, jwt)

@@ -142,7 +142,7 @@ class AuthService():
         return jwt.decode().rstrip("=")
     
         
-    def _validate_jwt(self, jwt: str) -> False | tuple[dict, dict]:
+    def _validate_jwt(self, jwt: str) -> bool | tuple[dict, dict]:
         """
         Valuates a Json Web Token and returns False | (dict[header], dict[payload])
         """

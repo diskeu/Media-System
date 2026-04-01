@@ -25,7 +25,8 @@ from Backend.App.Exceptions.auth_errors import (
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
 from datetime import datetime, time
-from json import loads as json_loads, dumps as json_dumps, JSONDecodeError
+from json import loads as json_loads, dumps as j_dumps, JSONDecodeError
+from functools import partial
 import random
 import string
 import re
@@ -124,10 +125,11 @@ class AuthService():
             "birthdate": birthdate
         }
         # parse the header and payload into json format
+        json_dumps = partial(j_dumps, default=str)
         header_json, payload_json = map(json_dumps, (header, payload))
 
-        urlsafe_b64_header = urlsafe_b64encode(header_json)
-        urlsafe_b64_payload = urlsafe_b64encode(payload_json)
+        urlsafe_b64_header = urlsafe_b64encode(header_json.encode())
+        urlsafe_b64_payload = urlsafe_b64encode(payload_json.encode())
 
         data = urlsafe_b64_header + b"." + urlsafe_b64_payload
 
@@ -152,8 +154,9 @@ class AuthService():
             """
             padding = -len(s) % 4
             return s + ("=" * padding)
-        
-        header, payload, sign = jwt.split(".")
+        try:
+            header, payload, sign = jwt.split(".")
+        except ValueError: return False
 
         data = header.encode() + b"." + payload.encode()
 
@@ -179,6 +182,11 @@ class AuthService():
             )
         except JSONDecodeError:
             return False
+        
+        # format non-serializable json-formats
+        try:
+            payload_dict["birthdate"] = datetime.strptime(payload_dict["birthdate"], '%Y-%m-%d')
+        except ValueError: ...
         return (header_dict, payload_dict)
 
     async def refresh(self, refresh_token: bytes) -> bytes: ...

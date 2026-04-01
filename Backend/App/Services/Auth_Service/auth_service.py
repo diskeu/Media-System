@@ -196,7 +196,8 @@ class AuthService():
         if not self.validate_password(password): raise InvalidPasswordError
         if not self.validate_email(email): raise InvalidEmailError
 
-        self.user_repo.check_user_password()
+        return_val = await self.user_repo.check_user_password(password, email)
+        if retur
 
     async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
         """
@@ -209,7 +210,7 @@ class AuthService():
             ReplacedRefreshTokenUseError,
             ExpiredRefreshTokenError
         """
-        return_val = self.refresh_token_repo.validate_token_hashes([refresh_token])
+        return_val = await self.refresh_token_repo.validate_token_hashes([refresh_token])
         if isinstance(return_val, RepoError):
             raise(return_val)
         
@@ -219,7 +220,7 @@ class AuthService():
         
         # invalid all client tokens if token is replaced
         if return_dict["outdated_token_use"]:
-            r_v = self.refresh_token_repo.invalid_all_refresh_tokens(return_dict["user_id"])
+            r_v = await self.refresh_token_repo.invalid_all_refresh_tokens(return_dict["user_id"])
             if isinstance(r_v, RepoError): return r_v
             raise ReplacedRefreshTokenUseError()
         if return_dict["expired"]: raise ExpiredRefreshTokenError()
@@ -235,7 +236,7 @@ class AuthService():
         # Token rotation
         if token_rotation:
             new_token_m = self._generate_refresh_token(return_dict["user_id"])
-            r_v = self.refresh_token_repo.token_rotation(
+            r_v = await self.refresh_token_repo.token_rotation(
                     user_id=return_dict["user_id"],
                     token_id=return_dict["token_id"],
                     new_token_hash=new_token_m.token_hash

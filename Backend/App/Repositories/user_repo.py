@@ -27,7 +27,7 @@ class UserRepo(BaseRepo):
             *models
         )
     
-    async def check_user_password(self, email: str) -> None | list[dict] | BaseRepo.RepoError:
+    async def check_user(self, email: str) -> None | list[dict] | BaseRepo.RepoError:
         """
         Given an email checks wether or not the user is in the DB and returns
         [{user_id: int, user_name: str, email: str, user_creation: datetime, birthdate: datetime}]

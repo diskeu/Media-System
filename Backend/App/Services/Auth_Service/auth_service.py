@@ -80,7 +80,7 @@ class AuthService():
             return False
         return True
     
-    def _generate_refresh_token(self, user_id: int) -> RefreshToken:
+    def _generate_refresh_token(self, user_id: int) -> tuple[RefreshToken, str]:
         """
         Generates a 24 digit token and returns RefreshToken model
         """
@@ -103,7 +103,7 @@ class AuthService():
             replaced_by=None
         )
 
-        return refresh_token_m
+        return (refresh_token_m, token)
 
     def _generate_jwt(
             self,
@@ -192,7 +192,7 @@ class AuthService():
         except ValueError: ...
         return (header_dict, payload_dict)
     
-    async def login(self, email: str, password: str) -> tuple[bytes, bytes] | RepoError:
+    async def login(self, email: str, password: str) -> tuple[str, str] | RepoError:
         """
         Login a user via email & password.
         Returns (refresh_token_hash, jwt).
@@ -213,7 +213,7 @@ class AuthService():
         if return_dict["hashed_password"] != password_hash: raise InvalidPasswordError
 
         # generating refresh token and jwt
-        refresh_token_model = self._generate_refresh_token(return_dict["user_id"])
+        refresh_token_model, token = self._generate_refresh_token(return_dict["user_id"])
         jwt = self._generate_jwt(
             user_id=return_dict["user_id"],
             user_name=return_dict["user_name"],
@@ -225,9 +225,9 @@ class AuthService():
         return_val = await self.refresh_token_repo.insert_token_model(refresh_token_model)
         if isinstance(return_val, RepoError): return return_val
 
-        return (refresh_token_model.token_hash, jwt)
+        return (token, jwt)
 
-    async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
+    async def refresh(self, refresh_token: str, token_rotation: bool = False) -> None | tuple[str, str] | str | RepoError:
         """
         checks the validity of the refresh_token and returns a pair
         of new (refresh_token if token_rotation == True, acces_token) | None if refresh_token is invalid.
@@ -238,7 +238,11 @@ class AuthService():
             ReplacedRefreshTokenUseError,
             ExpiredRefreshTokenError
         """
-        return_val = await self.refresh_token_repo.validate_token_hashes([refresh_token])
+        token_h = sha512(
+            refresh_token, usedforsecurity=True
+        ).digest()
+
+        return_val = await self.refresh_token_repo.validate_token_hashes([token_h])
         if isinstance(return_val, RepoError): return return_val
         
         if not return_val: raise InvalidRefreshTokenError() # -> Token is invalid
@@ -262,7 +266,7 @@ class AuthService():
         )
         # Token rotation
         if token_rotation:
-            new_token_m = self._generate_refresh_token(return_dict["user_id"])
+            new_token_m, token = self._generate_refresh_token(return_dict["user_id"])
             r_v = await self.refresh_token_repo.token_rotation(
                     user_id=return_dict["user_id"],
                     token_id=return_dict["token_id"],
@@ -270,7 +274,7 @@ class AuthService():
                 )
             if isinstance(r_v, RepoError): return r_v
 
-            return (jwt, new_token_m.token_hash)
+            return (jwt, token)
         return jwt
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime):
@@ -314,7 +318,7 @@ class AuthService():
             thread_pool=self.thread_pool
         )
 
-    async def validate_email_token(self, token: str) -> tuple[bytes, bytes] | RepoError:
+    async def validate_email_token(self, token: str) -> tuple[str, str] | RepoError:
         """
         Wrapper for verification_tokens.validate_token.
         If the corresponding Token is valid, insert the user into the DB
@@ -348,6 +352,5 @@ class AuthService():
             user_m.created_at,
             user_m.birth_date
         )
-        refresh_token_hash = self._generate_refresh_token(user_m.user_id).token_hash
-
-        return (refresh_token_hash, jwt)
+        _, token = self._generate_refresh_token(user_m.user_id)
+        return (token, jwt)

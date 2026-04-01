@@ -12,8 +12,8 @@ from Backend.App.Models.user import User
 from Backend.App.Models.refresh_token import RefreshToken
 # _____Hashing / (en/de)coding etc._____
 from hashlib import sha256, sha512
-from base64 import urlsafe_b64encode
-from hmac import digest as hmac_digest
+from base64 import urlsafe_b64encode, urlsafe_b64decode
+from hmac import digest as hmac_digest, compare_digest
 # _______________Exceptions_____________
 from Backend.App.Exceptions.auth_errors import (
     EmailAlreadyExistsError,
@@ -25,6 +25,7 @@ from Backend.App.Exceptions.auth_errors import (
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
 from datetime import datetime, time
+from json import loads as json_loads, dumps as json_dumps, JSONDecodeError
 import random
 import string
 import re
@@ -134,7 +135,47 @@ class AuthService():
         )
         jwt = urlsafe_b64_header + b"." + urlsafe_b64_payload + b"." + urlsafe_b64encode(sign)
         return jwt.decode()
+    
         
+    def _validate_jwt(self, jwt: str) -> False | tuple[dict, dict]:
+        """
+        Valuates a Json Web Token and returns False | (dict[header], dict[payload])
+        """
+        def _add_padding(s: str) -> str:
+            """
+            Adds back in the required padding before decoding.
+            """
+            padding = -len(s) % 4
+            return s + ("=" * padding)
+        
+        header, payload, sign = jwt.split(".")
+
+        data = header.encode() + b"." + payload.encode()
+
+        expected_sign = urlsafe_b64encode(
+                hmac_digest(
+                    key=self.SECRET,
+                    msg=data,
+                    digest="sha256"
+            )
+        ).decode()
+        if not compare_digest(_add_padding(sign), expected_sign):
+            return False # needs to be json to convert str back to dict
+        
+        
+        # decode json -> python dict
+        try:
+            header_dict, payload_dict = map(
+                json_loads,
+                map(
+                    urlsafe_b64decode,
+                    map(_add_padding, (header, payload))
+                )
+            )
+        except JSONDecodeError:
+            return False
+        return (header_dict, payload_dict)
+
     async def refresh(self, refresh_token: bytes) -> bytes: ...
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime):

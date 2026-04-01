@@ -12,6 +12,7 @@ from Backend.App.Models.user import User
 from Backend.App.Models.refresh_token import RefreshToken
 # _____Hashing / (en/de)coding etc._____
 from hashlib import sha256, sha512
+import bcrypt
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from hmac import digest as hmac_digest, compare_digest
 # _______________Exceptions_____________
@@ -79,6 +80,10 @@ class AuthService():
         if isinstance(flag, re.Match) == False:
             return False
         return True
+    def __generate_hash(password: str) -> str:
+        bytes = password.encode("utf-8")
+        salt = bcrypt.gen_salt()
+        return bcrypt.hashp(bytes, salt)
     
     def _generate_refresh_token(self, user_id: int) -> tuple[RefreshToken, str]:
         """
@@ -204,7 +209,7 @@ class AuthService():
         if not self.validate_password(password): raise InvalidPasswordError
         if not self.validate_email(email): raise InvalidEmailError
 
-        password_hash = sha256(password.encode()).hexdigest()
+        password_hash = self.__generate_hash(password)
         return_val = await self.user_repo.check_user(email)
         if isinstance(return_val, RepoError): return return_val
 
@@ -301,7 +306,7 @@ class AuthService():
         user = User(
             user_id=DEFAULT,
             user_name=name,
-            hashed_password=sha256(password.encode()).hexdigest(),
+            hashed_password=self.__generate_hash(password),
             email=email,
             created_at=DEFAULT,
             birth_date=birth_date,

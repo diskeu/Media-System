@@ -11,7 +11,7 @@ from utils.sentinel import DEFAULT
 from Backend.App.Models.user import User
 from Backend.App.Models.refresh_token import RefreshToken
 # _____Hashing / (en/de)coding etc._____
-from hashlib import sha256, sha512
+from hashlib import sha512
 import bcrypt
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from hmac import digest as hmac_digest, compare_digest
@@ -209,13 +209,16 @@ class AuthService():
         if not self.validate_password(password): raise InvalidPasswordError
         if not self.validate_email(email): raise InvalidEmailError
 
-        password_hash = self.__generate_hash(password)
         return_val = await self.user_repo.check_user(email)
         if isinstance(return_val, RepoError): return return_val
 
         if not return_val: raise InvalidUserError
         return_dict = return_val[0]
-        if return_dict["hashed_password"] != password_hash: raise InvalidPasswordError
+
+        if not bcrypt.checkpw(
+            password.encode(),
+            return_dict["hashed_password"].encode()
+        ): raise InvalidPasswordError
 
         # generating refresh token and jwt
         refresh_token_model, token = self._generate_refresh_token(return_dict["user_id"])

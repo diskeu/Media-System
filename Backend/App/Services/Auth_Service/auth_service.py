@@ -144,7 +144,6 @@ class AuthService():
 
         # decode jwt & remove trailing '='
         return jwt.decode().rstrip("=")
-    
         
     def _validate_jwt(self, jwt: str) -> bool | tuple[dict, dict]:
         """
@@ -170,7 +169,7 @@ class AuthService():
             )
         ).decode()
         if not compare_digest(_add_padding(sign), expected_sign):
-            return False # needs to be json to convert str back to dict
+            return False
         
         # decode json -> python dict
         try:
@@ -191,6 +190,13 @@ class AuthService():
             payload_dict["birthdate"] = datetime.strptime(payload_dict["birthdate"], '%Y-%m-%d')
         except ValueError: ...
         return (header_dict, payload_dict)
+    
+    async def login(self, email: str, password: str) -> tuple[bytes, bytes] | RepoError:
+        # validate email & password regex first
+        if not self.validate_password(password): raise InvalidPasswordError
+        if not self.validate_email(email): raise InvalidEmailError
+
+        
 
     async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
         """

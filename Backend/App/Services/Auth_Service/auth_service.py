@@ -196,7 +196,7 @@ class AuthService():
         if not self.validate_password(password): raise InvalidPasswordError
         if not self.validate_email(email): raise InvalidEmailError
 
-        
+        self.user_repo.check_user_password()
 
     async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
         """

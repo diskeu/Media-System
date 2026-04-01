@@ -27,15 +27,15 @@ class UserRepo(BaseRepo):
             *models
         )
     
-    async def check_user_password(self, user_id: int, email: str) -> None | list[dict] | BaseRepo.RepoError:
+    async def check_user_password(self, password: str, email: str) -> None | list[dict] | BaseRepo.RepoError:
         """
-        Given an user_id & email checks wether or not the user is in the DB and returns
+        Given an password & email checks wether or not the user is in the DB and returns
         [{user_id: int, user_name: str, email: str, user_creation: datetime, birthdate: datetime}]
         """
         return self.get_all_enriched(
             table="messenger.users",
             columns=("user_id", "user_name", "email", "created_at", "birth_date"),
-            primary_keys=(("user_id", "email"), [(user_id), (email)])
+            primary_keys=(("password", "email"), [(password), (email)])
         )
     
     async def update_single_user(self, user_id, values: dict) -> None | BaseRepo.RepoError:

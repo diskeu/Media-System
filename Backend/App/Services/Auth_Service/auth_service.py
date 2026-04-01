@@ -23,7 +23,8 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidEmailVerficationTokenError,
     InvalidRefreshTokenError,
     ReplacedRefreshTokenUseError,
-    ExpiredRefreshTokenError
+    ExpiredRefreshTokenError,
+    InvalidUserError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
@@ -192,12 +193,39 @@ class AuthService():
         return (header_dict, payload_dict)
     
     async def login(self, email: str, password: str) -> tuple[bytes, bytes] | RepoError:
+        """
+        Login a user via email & password.
+        Returns (refresh_token_hash, jwt).
+        Raises
+            InvalidPasswordError
+            InvalidEmailError
+        """
         # validate email & password regex first
         if not self.validate_password(password): raise InvalidPasswordError
         if not self.validate_email(email): raise InvalidEmailError
 
-        return_val = await self.user_repo.check_user_password(password, email)
-        if retur
+        password_hash = sha256(password.encode()).hexdigest()
+        return_val = await self.user_repo.check_user(email)
+        if isinstance(return_val, RepoError): return return_val
+
+        if not return_val: raise InvalidUserError
+        return_dict = return_val[0]
+        if return_dict["hashed_password"] != password_hash: raise InvalidPasswordError
+
+        # generating refresh token and jwt
+        refresh_token_model = self._generate_refresh_token(return_dict["user_id"])
+        jwt = self._generate_jwt(
+            user_id=return_dict["user_id"],
+            user_name=return_dict["user_name"],
+            email=return_dict["email"],
+            user_creation=return_dict["created_at"],
+            birthdate=return_dict["birth_date"]
+        )
+        # insert refresh token into DB
+        return_val = await self.refresh_token_repo.insert_token_model(refresh_token_model)
+        if isinstance(return_val, RepoError): return return_val
+
+        return (refresh_token_model.token_hash, jwt)
 
     async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
         """
@@ -211,8 +239,7 @@ class AuthService():
             ExpiredRefreshTokenError
         """
         return_val = await self.refresh_token_repo.validate_token_hashes([refresh_token])
-        if isinstance(return_val, RepoError):
-            raise(return_val)
+        if isinstance(return_val, RepoError): return return_val
         
         if not return_val: raise InvalidRefreshTokenError() # -> Token is invalid
 

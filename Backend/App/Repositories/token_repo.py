@@ -36,14 +36,21 @@ class RefreshTokenRepo(BaseRepo):
         # the client should get a 403 status code,
         # with an login again page
         return await self.get_all_enriched(
-            table="messenger.refresh_tokens",
+            table="messenger.refresh_tokens r",
             primary_keys=("token_hash", [(token_h,) for token_h in token_hash]),
             columns=(
-                "token_hash",
-                "created_at",
+                "r.token_hash",
+                "r.token_id",
+                "u.user_id",
+                "u.user_name",
+                "u.created_at",
+                "u.birth_date",
+                "u.email",
+                "r.created_at",
                 "IF(TIMESTAMPDIFF(MINUTE, NOW(), t_expiry_date) > 0, FALSE, TRUE) AS expired",
                 "IF(replaced_by IS NOT NULL, TRUE, FALSE) AS outdated_token_use"
-            )
+            ),
+            joins=("INNER JOIN messenger.users u ", "u.user_id = r.user_id")
         )
     async def invalid_all_refresh_tokens(self, user_id: int) -> None | BaseRepo.RepoError:
         """
@@ -56,13 +63,12 @@ class RefreshTokenRepo(BaseRepo):
         )
         return await self.execute_write(delete_query, user_id)
     
-    async def token_rotation(self, model: RefreshToken, new_token_hash: bytes) -> None | BaseRepo.RepoError:
+    async def token_rotation(self, user_id: int, token_id: int, new_token_hash: bytes) -> None | BaseRepo.RepoError:
         """
         Makes new token to replace the old one.
-        Happens when validate_token_hashes returns an outdated val.
         Returns when an error occures
         """
-        if isinstance(model.token_id, DEFAULT):
+        if isinstance(token_id, DEFAULT):
             self.logger.exception(
                 "token_id must be replaced by the actual token_id"
             )
@@ -75,7 +81,7 @@ class RefreshTokenRepo(BaseRepo):
         # Building new token model
         token_model = RefreshToken(
             token_id=DEFAULT,
-            user_id=model.user_id,
+            user_id=user_id,
             token_hash=new_token_hash,
             created_at=DEFAULT,
             t_expiry_date=None, # Trigger
@@ -104,6 +110,6 @@ class RefreshTokenRepo(BaseRepo):
                     "replaced_by": return_val,  # id of the new token
                     "revoked_at": datetime.now()
                 },
-                other_statement=f"WHERE token_id = {model.token_id}"
+                other_statement=f"WHERE token_id = {token_id}"
             )
         return await self.execute_write(update_query, *vals)

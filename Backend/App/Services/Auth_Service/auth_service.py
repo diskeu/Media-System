@@ -76,9 +76,9 @@ class AuthService():
             return False
         return True
     
-    async def _generate_refresh_token(self, user_id: int) -> bytes:
+    def _generate_refresh_token(self, user_id: int) -> RefreshToken:
         """
-        Generates a 24 digit token and inserts it's hash into the DB
+        Generates a 24 digit token and returns RefreshToken model
         """
         # generating token
         token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=24))
@@ -98,9 +98,8 @@ class AuthService():
             revoked_at=None,
             replaced_by=None
         )
-        self.refresh_token_repo.insert_token_model(refresh_token_m)
 
-        return token_h
+        return refresh_token_m
 
     def _generate_jwt(
             self,
@@ -170,7 +169,6 @@ class AuthService():
         if not compare_digest(_add_padding(sign), expected_sign):
             return False # needs to be json to convert str back to dict
         
-        
         # decode json -> python dict
         try:
             header_dict, payload_dict = map(
@@ -189,7 +187,47 @@ class AuthService():
         except ValueError: ...
         return (header_dict, payload_dict)
 
-    async def refresh(self, refresh_token: bytes) -> bytes: ...
+    async def refresh(self, refresh_token: bytes, token_rotation: bool = False) -> None | tuple[bytes, bytes] | bytes | RepoError:
+        """
+        checks the validity of the refresh_token and returns a pair
+        of new (refresh_token if token_rotation == True, acces_token) | None if refresh_token is invalid.
+        If a invalid refresh_token is used, then all tokens from the client become invalid. the User needs
+        to log in again.
+        """
+        return_val = self.refresh_token_repo.validate_token_hashes([refresh_token])
+        if isinstance(return_val, RepoError):
+            raise(return_val)
+        
+        if not return_val: return None # -> Token is invalid
+
+        return_dict = return_val[0]
+        
+        # invalid all client tokens if token is replaced
+        if return_dict["outdated_token_use"]:
+            r_v = self.refresh_token_repo.invalid_all_refresh_tokens(return_dict["user_id"])
+            if isinstance(r_v, RepoError): return r_v
+        if return_dict["expired"]: return None
+
+        # get jwt
+        jwt = self._generate_jwt(
+            user_id=return_dict["user_id"],
+            user_name=return_dict["user_name"],
+            email=return_dict["email"],
+            user_creation=return_dict["created_at"],
+            birthdate=return_dict["birth_date"]
+        )
+        # Token rotation
+        if token_rotation:
+            new_token_m = self._generate_refresh_token(return_dict["user_id"])
+            r_v = self.refresh_token_repo.token_rotation(
+                    user_id=return_dict["user_id"],
+                    token_id=return_dict["token_id"],
+                    new_token_hash=new_token_m.token_hash
+                )
+            if isinstance(r_v, RepoError): return r_v
+
+            return (jwt, new_token_m.token_hash)
+        return jwt
 
     async def register(self, name: str, email: str, password: str, birth_date: datetime):
         """
@@ -257,3 +295,4 @@ class AuthService():
                     raise NotNullError()
                 else:
                     raise RepoError.error_table[8](msg)
+            raise sucess

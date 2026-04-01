@@ -109,6 +109,10 @@ class AuthService():
             user_creation: datetime,
             birthdate: datetime
         ):
+        header = {
+            "alg": "HS256",
+            "typ": "jwt"
+        }
         payload = {
             "iss": self.ISSUER,
             "sub": user_id,
@@ -119,12 +123,11 @@ class AuthService():
             "user_creation": user_creation,
             "birthdate": birthdate
         }
-        header = {
-            "alg": "HS256",
-            "typ": "jwt"
-        }
-        urlsafe_b64_header = urlsafe_b64encode(header)
-        urlsafe_b64_payload = urlsafe_b64encode(payload)
+        # parse the header and payload into json format
+        header_json, payload_json = map(json_dumps, (header, payload))
+
+        urlsafe_b64_header = urlsafe_b64encode(header_json)
+        urlsafe_b64_payload = urlsafe_b64encode(payload_json)
 
         data = urlsafe_b64_header + b"." + urlsafe_b64_payload
 
@@ -134,7 +137,9 @@ class AuthService():
             digest="sha256"
         )
         jwt = urlsafe_b64_header + b"." + urlsafe_b64_payload + b"." + urlsafe_b64encode(sign)
-        return jwt.decode()
+
+        # decode jwt & remove trailing '='
+        return jwt.decode().rstrip("=")
     
         
     def _validate_jwt(self, jwt: str) -> False | tuple[dict, dict]:

@@ -20,7 +20,10 @@ from Backend.App.Exceptions.auth_errors import (
     UserNameAlreadyExistsError,
     InvalidPasswordError,
     InvalidEmailError,
-    InvalidEmailVerficationTokenError
+    InvalidEmailVerficationTokenError,
+    InvalidRefreshTokenError,
+    ReplacedRefreshTokenUseError,
+    ExpiredRefreshTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
@@ -193,12 +196,16 @@ class AuthService():
         of new (refresh_token if token_rotation == True, acces_token) | None if refresh_token is invalid.
         If a invalid refresh_token is used, then all tokens from the client become invalid. the User needs
         to log in again.
+        Raises
+            InvalidRefreshTokenError,
+            ReplacedRefreshTokenUseError,
+            ExpiredRefreshTokenError
         """
         return_val = self.refresh_token_repo.validate_token_hashes([refresh_token])
         if isinstance(return_val, RepoError):
             raise(return_val)
         
-        if not return_val: return None # -> Token is invalid
+        if not return_val: raise InvalidRefreshTokenError() # -> Token is invalid
 
         return_dict = return_val[0]
         
@@ -206,7 +213,8 @@ class AuthService():
         if return_dict["outdated_token_use"]:
             r_v = self.refresh_token_repo.invalid_all_refresh_tokens(return_dict["user_id"])
             if isinstance(r_v, RepoError): return r_v
-        if return_dict["expired"]: return None
+            raise ReplacedRefreshTokenUseError()
+        if return_dict["expired"]: raise ExpiredRefreshTokenError()
 
         # get jwt
         jwt = self._generate_jwt(
@@ -270,10 +278,10 @@ class AuthService():
             thread_pool=self.thread_pool
         )
 
-    async def validate_email_token(self, token: str):
+    async def validate_email_token(self, token: str) -> bytes | RepoError:
         """
         Wrapper for verification_tokens.validate_token.
-        If the corresponding Token is valid, insert it into the DB.
+        If the corresponding Token is valid, insert the user into the DB.
         Raises:
             InvalidEmailVerficationToken if the token is not valid
         """

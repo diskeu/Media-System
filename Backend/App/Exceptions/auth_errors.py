@@ -17,3 +17,15 @@ class InvalidEmailError(BaseException):
 class InvalidEmailVerficationTokenError(BaseException):
     def __init__(self, message = "Registration Token is invalid or expired"):
         super().__init__(message)
+
+class InvalidRefreshTokenError(BaseException):
+    def __init__(self, message = "Given RefreshToken is invalid"):
+        super().__init__(message)
+
+class ExpiredRefreshTokenError(InvalidRefreshTokenError):
+    def __init__(self, message = "Given RefreshToken has expired"):
+        super().__init__(message)
+
+class ReplacedRefreshTokenUseError(InvalidRefreshTokenError):
+    def __init__(self, message = "Given RefreshToken has already been replaced"):
+        super().__init__(message)

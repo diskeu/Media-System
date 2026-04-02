@@ -29,7 +29,7 @@ from Backend.App.Exceptions.auth_errors import (
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
-from datetime import datetime, time
+from datetime import datetime, timedelta
 from json import loads as json_loads, dumps as j_dumps, JSONDecodeError
 from functools import partial
 import random
@@ -50,7 +50,7 @@ class AuthService():
             mail_sender: MailSender,
             SECRET: bytes,
             ISSUER: str,
-            JWT_EXP_TIME: time,
+            JWT_EXP_TIME: timedelta,
             thread_pool = None,
         ):
         """
@@ -125,12 +125,12 @@ class AuthService():
         payload = {
             "iss": self.ISSUER,
             "sub": user_id,
-            "exp": datetime.combine(datetime.now(), self.JWT_EXP_TIME).timestamp(),
-            "iat": datetime.now().timestamp(),
+            "exp": (datetime.now() + self.JWT_EXP_TIME).strftime("%Y-%m-%d %H:%M:%S"), # -> Datetime str
+            "iat": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "user_name": user_name,
             "email": email,
             "user_creation": user_creation,
-            "birthdate": birthdate
+            "birthdate": birthdate.strftime("%Y-%m-%d")
         }
         # parse the header and payload into json format
         json_dumps = partial(j_dumps, default=str)
@@ -186,15 +186,18 @@ class AuthService():
                     map(_add_padding, (header, payload))
                 )
             )
-        except JSONDecodeError:
+        except JSONDecodeError as e:
             return False
         
-        if payload_dict["exp"] - payload_dict["iat"] <= 0: return False
-
         # format non-serializable json-formats
         try:
             payload_dict["birthdate"] = datetime.strptime(payload_dict["birthdate"], '%Y-%m-%d')
-        except ValueError: ...
+            payload_dict["exp"] = datetime.strptime(payload_dict["exp"], '%Y-%m-%d %H:%M:%S')
+            payload_dict["iat"] = datetime.strptime(payload_dict["iat"], '%Y-%m-%d %H:%M:%S')
+        except ValueError: return False
+        # checking exp time
+        if (payload_dict["exp"] - payload_dict["iat"]).total_seconds() <= 0:
+            return False
         return (header_dict, payload_dict)
     
     async def login(self, email: str, password: str) -> tuple[str, str] | RepoError:

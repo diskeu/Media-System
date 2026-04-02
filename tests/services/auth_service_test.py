@@ -5,7 +5,7 @@ from Backend.App.Database.connection import connect
 from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
 from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 from Backend.App.Repositories.token_repo import RefreshTokenRepo
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 import time
 async def get_auth_service_credentials():
@@ -57,11 +57,11 @@ async def jwt_test_case():
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         ISSUER="something",
-        JWT_EXP_TIME=datetime.time(datetime.now())
+        JWT_EXP_TIME=timedelta(hours=2)
     )
 
     jwt1 = auth_service._generate_jwt(32, "something", "something@email", datetime.now(), birthdate=datetime.now())
-    jwt2 = auth_service._generate_jwt(21, "something", "something@email", datetime.now(), birthdate=datetime.now())
+    jwt2 = auth_service._generate_jwt(2122, "something", "something@email", datetime.now(), birthdate=datetime.now())
     jwt3 = auth_service._generate_jwt(2332, "something", "something@email", datetime.now(), birthdate=datetime.now())
     # print("JWT1", jwt1)
     # print("JWT2", jwt2)

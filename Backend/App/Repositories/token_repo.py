@@ -95,11 +95,7 @@ class RefreshTokenRepo(BaseRepo):
         ############################################################
         
         # call func to post the new token
-        return_val = await self.post_model(
-                "messenger.refresh_tokens",
-                token_model,
-                return_last_inserted_id=True
-            )
+        return_val = await self.insert_token_model(token_model)
         if isinstance(return_val, self.RepoError): return return_val
 
         # return val is last_insert_id

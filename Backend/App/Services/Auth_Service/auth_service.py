@@ -225,6 +225,8 @@ class AuthService():
 
         # generating refresh token and jwt
         refresh_token_model, token = self._generate_refresh_token(return_dict["user_id"])
+        refresh_token_model.user_id = return_dict["user_id"] # -> update DEFAULT to user_id
+
         jwt = self._generate_jwt(
             user_id=return_dict["user_id"],
             user_name=return_dict["user_name"],

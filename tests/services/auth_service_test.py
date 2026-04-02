@@ -98,4 +98,20 @@ async def refresh_test_case():
     print(await auth_service.refresh(refresh_token=refresh_token, token_rotation=True))
     print(await auth_service.refresh(refresh_token=refresh_token))
 
-asyncio.run(refresh_test_case())
+# asyncio.run(refresh_test_case())
+
+# Testcase for the login func
+async def login_test_case():
+    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    auth_service = AuthService(
+        user_repo=u_r,
+        refresh_token_repo=rt_r,
+        verification_tokens_c=v_t,
+        mail_sender=MailSender(0),
+        SECRET=b"secret3221",
+        ISSUER="something",
+        JWT_EXP_TIME=timedelta(hours=2)
+    )
+    print(await auth_service.login("jelenzt@gmail.com", "0z7ZBu2Bg!J9"))
+
+asyncio.run(login_test_case())

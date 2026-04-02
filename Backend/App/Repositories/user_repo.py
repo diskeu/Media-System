@@ -33,7 +33,7 @@ class UserRepo(BaseRepo):
         Given an email checks wether or not the user is in the DB and returns
         [{user_id: int, user_name: str, hashed_password: str, email: str, user_creation: datetime, birthdate: datetime}]
         """
-        return self.get_all_enriched(
+        return await self.get_all_enriched(
             table="messenger.users",
             columns=("user_id", "user_name", "hashed_password", "email", "created_at", "birth_date"),
             primary_keys=("email", [(email)])

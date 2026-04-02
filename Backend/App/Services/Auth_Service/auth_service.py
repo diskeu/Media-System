@@ -80,10 +80,10 @@ class AuthService():
         if isinstance(flag, re.Match) == False:
             return False
         return True
-    def __generate_hash(password: str) -> str:
+    def __generate_hash(self, password: str) -> str:
         bytes = password.encode("utf-8")
-        salt = bcrypt.gen_salt()
-        return bcrypt.hashp(bytes, salt)
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(bytes, salt)
     
     def _generate_refresh_token(self, user_id: int) -> tuple[RefreshToken, str]:
         """
@@ -94,7 +94,7 @@ class AuthService():
 
         # hashing the token
         token_h = sha512(
-            token, usedforsecurity=True
+            token.encode(), usedforsecurity=True
         ).digest()
 
         # defining model
@@ -250,7 +250,7 @@ class AuthService():
             ExpiredRefreshTokenError
         """
         token_h = sha512(
-            refresh_token, usedforsecurity=True
+            refresh_token.encode(), usedforsecurity=True
         ).digest()
 
         return_val = await self.refresh_token_repo.validate_token_hashes([token_h])

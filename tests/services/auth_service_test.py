@@ -25,10 +25,19 @@ async def get_auth_service_credentials():
     return connection, u_r, v_t, rt_r
 
 async def connect_test():
-    connection, u_r, v_t, _ = await get_auth_service_credentials()
-    a_s = AuthService(u_r, v_t, MailSender(0))
+    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    a_s = AuthService(
+        user_repo=u_r,
+        refresh_token_repo=rt_r,
+        verification_tokens_c=v_t,
+        mail_sender=MailSender(0),
+        SECRET=b"secret3221",
+        ISSUER="something",
+        JWT_EXP_TIME=timedelta(hours=2)
+
+    )
     sucess = await a_s.register(
-        name="dsadssa",
+        name="test_ser",
         email="jelenzt@gmail.com",
         password="0z7ZBu2Bg!J9",
         birth_date=datetime.now(),
@@ -36,7 +45,7 @@ async def connect_test():
     for token in v_t.token_dict: token = token
     print(await a_s.validate_email_token(token))
 
-# asyncio.run(connect_test())
+asyncio.run(connect_test())
 
 # testing verification_tokens.py
 # _______________________________
@@ -71,4 +80,4 @@ async def jwt_test_case():
     print(auth_service._validate_jwt(jwt2))
     print(auth_service._validate_jwt(jwt3))
     print(auth_service._validate_jwt("wrong-jwt.s"))
-asyncio.run(jwt_test_case())
+# asyncio.run(jwt_test_case())

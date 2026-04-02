@@ -262,6 +262,7 @@ class AuthService():
         
         # invalid all client tokens if token is replaced
         if return_dict["outdated_token_use"]:
+            print("INVALID ALL REFRESH TOKENS")
             r_v = await self.refresh_token_repo.invalid_all_refresh_tokens(return_dict["user_id"])
             if isinstance(r_v, RepoError): return r_v
             raise ReplacedRefreshTokenUseError()

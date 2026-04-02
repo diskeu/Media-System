@@ -50,7 +50,7 @@ class RefreshTokenRepo(BaseRepo):
                 "IF(TIMESTAMPDIFF(MINUTE, NOW(), t_expiry_date) > 0, FALSE, TRUE) AS expired",
                 "IF(replaced_by IS NOT NULL, TRUE, FALSE) AS outdated_token_use"
             ),
-            joins=("INNER JOIN messenger.users u ", "u.user_id = r.user_id")
+            joins=[("INNER JOIN messenger.users u ", "u.user_id = r.user_id")]
         )
     async def invalid_all_refresh_tokens(self, user_id: int) -> None | BaseRepo.RepoError:
         """

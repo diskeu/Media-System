@@ -94,3 +94,8 @@ async def refresh_test_case():
         ISSUER="something",
         JWT_EXP_TIME=timedelta(hours=2)
     )
+    refresh_token = "0K3UGZF8V0127DJ50HH7JD1U" # -> Valid refresh Token
+    print(await auth_service.refresh(refresh_token=refresh_token, token_rotation=True))
+    print(await auth_service.refresh(refresh_token=refresh_token))
+
+asyncio.run(refresh_test_case())

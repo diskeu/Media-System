@@ -204,6 +204,7 @@ app.post("/users/")(create_user)
 die funktion app.post wird mit "/users/" aufgerufen und returnt eine funktion dei eine funktion als argument braucht
 
 Decorator
+# return_when_error("error_typ")(function)("function_arguments") -> wrapper als callable
 man fügt etwas zu einer base funktion hinzu ohne die funktion zu ändern
 def add_sprinkles(func):
     def wrapper():

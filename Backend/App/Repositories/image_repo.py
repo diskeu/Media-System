@@ -14,7 +14,7 @@ class ImageRepo(BaseRepo):
             "messenger.images",
             *models
         )
-    async def get_images_path(self, image_ids: list[int] | None, post_ids: list[int] | None) -> list[dict[any]] | BaseRepo.RepoError:
+    async def get_images_paths(self, image_ids: list[int] | None, post_ids: list[int] | None) -> list[dict[any]] | BaseRepo.RepoError:
         """
         Gets all paths of the images of the specific image_ids\n
         Pare image_ids or post_ids not both
@@ -31,7 +31,7 @@ class ImageRepo(BaseRepo):
             primary_keys=("image_id", [(image_id, ) for image_id in image_ids]) if image_ids else ("post_id", [(post_id, ) for post_id in post_ids]),
             columns=["image_path"]
         )
-    async def delete_image(self, *image_ids: int) -> None | BaseRepo.RepoError:
+    async def delete_images(self, *image_ids: int) -> None | BaseRepo.RepoError:
         """Given a list of image_ids, deletes the corresponding images"""
         # making condition
         statement = ["%s" for _ in range(len(image_ids))]

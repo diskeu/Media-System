@@ -20,15 +20,27 @@ class UserRepo(BaseRepo):
         return user_model # model | RepoError
     
 
-    async def insert_user(self, *models: User) -> None | BaseRepo.RepoError:
+    async def insert_user(self, *models: User, return_last_insert_id: bool = False) -> None | int | BaseRepo.RepoError:
         """Given user models, inserts them into the DB, returns None | RepoError"""
         return await self.post_model(     # None | RepoError
             "messenger.users",
-            *models
+            *models,
+            return_last_inserted_id=return_last_insert_id
+        )
+    
+    async def check_user(self, email: str) -> None | list[dict] | BaseRepo.RepoError:
+        """
+        Given an email checks wether or not the user is in the DB and returns
+        [{user_id: int, user_name: str, hashed_password: str, email: str, user_creation: datetime, birthdate: datetime}]
+        """
+        return await self.get_all_enriched(
+            table="messenger.users",
+            columns=("user_id", "user_name", "hashed_password", "email", "created_at", "birth_date"),
+            primary_keys=("email", [(email,)])
         )
     
     async def update_single_user(self, user_id, values: dict) -> None | BaseRepo.RepoError:
-        """Given a 'user_id', values and a 'mysql.connector.connection_cext.CMySQLConnection', updates the user's values"""
+        """Given a 'user_id', values updates the user's values"""
         update_query, insert_values = self.build_update_query(
             table="messenger.users",
             update_val=values,

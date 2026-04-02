@@ -87,7 +87,7 @@ class AuthService():
     
     def _generate_refresh_token(self, user_id: int) -> tuple[RefreshToken, str]:
         """
-        Generates a 24 digit token and returns RefreshToken model
+        Generates a 24 digit token and returns (RefreshToken model, token)
         """
         # generating token
         token = ''.join(random.choices(string.ascii_uppercase + string.digits, k=24))
@@ -340,7 +340,7 @@ class AuthService():
         user_m: User = self.verification_tokens_c.validate_token(token)
         if user_m == False: raise InvalidEmailVerficationTokenError
 
-        sucess = await self.user_repo.insert_user(user_m)
+        sucess = await self.user_repo.insert_user(user_m, return_last_insert_id=True)
         
         if isinstance(sucess, RepoError):
             msg = str(sucess.exception)
@@ -363,5 +363,12 @@ class AuthService():
             user_m.created_at,
             user_m.birth_date
         )
-        _, token = self._generate_refresh_token(user_m.user_id)
+        # generating refresh token and insert it into the DB 
+        token_m, token = self._generate_refresh_token(user_m.user_id)
+
+        # updating token_m
+        token_m.user_id = sucess
+        return_val = await self.refresh_token_repo.insert_token_model(token_m)
+        if isinstance(return_val, RepoError): return return_val
+
         return (token, jwt)

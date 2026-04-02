@@ -20,11 +20,12 @@ class UserRepo(BaseRepo):
         return user_model # model | RepoError
     
 
-    async def insert_user(self, *models: User) -> None | BaseRepo.RepoError:
+    async def insert_user(self, *models: User, return_last_insert_id: bool = False) -> None | int | BaseRepo.RepoError:
         """Given user models, inserts them into the DB, returns None | RepoError"""
         return await self.post_model(     # None | RepoError
             "messenger.users",
-            *models
+            *models,
+            return_last_inserted_id=return_last_insert_id
         )
     
     async def check_user(self, email: str) -> None | list[dict] | BaseRepo.RepoError:

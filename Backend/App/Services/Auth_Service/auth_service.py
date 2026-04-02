@@ -209,19 +209,19 @@ class AuthService():
             InvalidEmailError
         """
         # validate email & password regex first
-        if not self.validate_password(password): raise InvalidPasswordError
-        if not self.validate_email(email): raise InvalidEmailError
+        if not self.validate_password(password): raise InvalidPasswordError("Password is incorrect")
+        if not self.validate_email(email): raise InvalidEmailError("Email is incorrect")
 
         return_val = await self.user_repo.check_user(email)
         if isinstance(return_val, RepoError): return return_val
 
-        if not return_val: raise InvalidUserError
+        if not return_val: raise InvalidUserError("Email corresponds to no user")
         return_dict = return_val[0]
-
+        
         if not bcrypt.checkpw(
             password.encode(),
             return_dict["hashed_password"].encode()
-        ): raise InvalidPasswordError
+        ): raise InvalidPasswordError("Password is incorrect")
 
         # generating refresh token and jwt
         refresh_token_model, token = self._generate_refresh_token(return_dict["user_id"])

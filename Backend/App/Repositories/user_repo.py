@@ -36,7 +36,7 @@ class UserRepo(BaseRepo):
         return await self.get_all_enriched(
             table="messenger.users",
             columns=("user_id", "user_name", "hashed_password", "email", "created_at", "birth_date"),
-            primary_keys=("email", [(email)])
+            primary_keys=("email", [(email,)])
         )
     
     async def update_single_user(self, user_id, values: dict) -> None | BaseRepo.RepoError:

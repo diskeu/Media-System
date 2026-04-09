@@ -6,6 +6,7 @@ from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 from Backend.App.Repositories.token_repo import RefreshTokenRepo
 from Backend.App.Repositories.base_repo import BaseRepo
 from Backend.App.Repositories.user_repo import UserRepo
+from typing import Callable, Any, Awaitable
 from utils.sentinel import DEFAULT
 # ______________Models__________________
 from Backend.App.Models.user import User
@@ -29,6 +30,8 @@ from Backend.App.Exceptions.auth_errors import (
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
+from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
+from email.message import EmailMessage
 from datetime import datetime, timedelta
 from json import loads as json_loads, dumps as j_dumps, JSONDecodeError
 from functools import partial
@@ -41,6 +44,9 @@ class AuthService():
     """Class for authenticating users"""
     PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*!?])[A-Za-z\d@$#%*!?]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+
+    AsyncWrapperFunc = Callable[[], Awaitable]
+    AsyncEmailFunc = Callable[[EmailMessage], Awaitable]
     
     def __init__(
             self,
@@ -150,6 +156,32 @@ class AuthService():
 
         # decode jwt & remove trailing '='
         return jwt.decode().rstrip("=")
+
+    def account_verification_mail(
+        self,
+        user_name: str,
+        user_email: str,
+        verification_token: str
+        ) -> Callable[[AsyncEmailFunc], AsyncWrapperFunc]:
+        """
+        Sends Mail using the defined mail in verification_mail.py and
+        returns the google api's json return in dict format
+        """
+        def decorator(func: AsyncEmailFunc) -> AsyncWrapperFunc:
+            async def wrapper() -> None:
+                # getting html mail message
+                body = build_verification_mail(user_name, verification_token)
+                
+                # Building msg
+                msg = EmailMessage()
+                msg.set_content(body, subtype="html")
+                msg["SUBJECT"] = "Confirm your Media-System account"
+                msg["FROM"] = "marvinmagmud@gmail.com"
+                msg["TO"] = user_email
+
+                await func(msg)
+            return wrapper
+        return decorator
         
     def _validate_jwt(self, jwt: str) -> bool | tuple[dict, dict]:
         """

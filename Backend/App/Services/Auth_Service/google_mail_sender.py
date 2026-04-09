@@ -8,7 +8,6 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from email.message import EmailMessage
 from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
 
 class MailSender():
@@ -76,24 +75,10 @@ class MailSender():
         with open(self.token_f_location, "w") as token_f:
             token_f.write(creds.to_json())
 
-    def _send_mail(self, user_name: str, user_email: str, verification_token: str):
-        """Sends Mail using the defined mail in verification_mail.py and returns the api's json return in dict format"""
+    def _send_mail(self, email_msg: EmailMessage):
+        """Sends mail using a EmailMessage class"""
+        raw: str = urlsafe_b64encode(msg.as_bytes()).decode()
 
-        # getting html
-        body = build_verification_mail(user_name, verification_token)
-        
-        # Building msg
-        msg = EmailMessage()
-        msg.set_content(body, subtype="html")
-
-        msg["Subject"] = "Confirm your Media-System account"
-        msg["FROM"] = "marvinmagmud@gmail.com"
-        msg["TO"] = user_email
-
-        # convert to raw format
-        raw = urlsafe_b64encode(msg.as_bytes()).decode()
-
-        # getting credentials
         creds = self.authenticate()
 
         # Connectiong script to gmail - api and sending mail

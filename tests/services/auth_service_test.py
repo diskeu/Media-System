@@ -6,6 +6,7 @@ from Backend.App.Services.Auth_Service.verification_tokens import VerificationTo
 from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 from Backend.App.Repositories.token_repo import RefreshTokenRepo
 from datetime import datetime, timedelta
+from email.message import EmailMessage
 import asyncio
 import time
 async def get_auth_service_credentials():
@@ -24,7 +25,7 @@ async def get_auth_service_credentials():
     )
     return connection, u_r, v_t, rt_r
 
-async def connect_test():
+async def test_registration():
     connection, u_r, v_t, rt_r = await get_auth_service_credentials()
     a_s = AuthService(
         user_repo=u_r,
@@ -32,6 +33,7 @@ async def connect_test():
         verification_tokens_c=v_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
         ISSUER="something",
         JWT_EXP_TIME=timedelta(hours=2)
 
@@ -65,6 +67,7 @@ async def jwt_test_case():
         verification_tokens_c=v_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
         ISSUER="something",
         JWT_EXP_TIME=timedelta(hours=2)
     )
@@ -91,6 +94,7 @@ async def refresh_test_case():
         verification_tokens_c=v_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
         ISSUER="something",
         JWT_EXP_TIME=timedelta(hours=2)
     )
@@ -109,9 +113,37 @@ async def login_test_case():
         verification_tokens_c=v_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
         ISSUER="something",
         JWT_EXP_TIME=timedelta(hours=2)
     )
     print(await auth_service.login("jelenzt@gmail.com", "0z7ZBu2Bg!J9"))
 
-asyncio.run(login_test_case())
+# asyncio.run(login_test_case())
+
+# Testcase for mail sending
+async def mail_send_test_case():
+    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    a_s = AuthService(
+        user_repo=u_r,
+        refresh_token_repo=rt_r,
+        verification_tokens_c=v_t,
+        mail_sender=MailSender(0),
+        SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
+        ISSUER="something",
+        JWT_EXP_TIME=timedelta(hours=2)
+
+    )
+    @a_s.mail_sender.send_mail_async()
+    def mail_deliverer(name: str, line_end: str = "."):
+        body = f"<h1>hello {name}{line_end}</h1>"
+        msg = EmailMessage()
+        msg.set_content(body, subtype="html")
+        msg["SUBJECT"] = "Confirm your Media-System account"
+        msg["FROM"] = "marvinmagmud@gmail.com"
+        msg["TO"] = "jelenzt@gmail.com"
+        return msg
+    await mail_deliverer("Tim")
+
+asyncio.run(mail_send_test_case())

@@ -1,10 +1,13 @@
 # Class for the sending of email-authentication-mails to the Client
+from __future__ import annotations
 import os.path
 from concurrent.futures import ThreadPoolExecutor
 from asyncio import get_running_loop
 from base64 import urlsafe_b64encode
 from typing import Callable, Awaitable
 
+from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
+from email.message import EmailMessage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,7 +17,7 @@ from Backend.App.Services.Auth_Service.verification_mail import build_verificati
 class MailSender():
     SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-    SendMailSyncFunc = Callable[[...], EmailMessage]
+    type SendMailSyncFunc = Callable[[...], EmailMessage]
     def __init__(
             self,
             port: int=0,
@@ -80,7 +83,7 @@ class MailSender():
 
     def _send_mail(self, email_msg: EmailMessage):
         """Sends mail using a EmailMessage class"""
-        raw: str = urlsafe_b64encode(msg.as_bytes()).decode()
+        raw: str = urlsafe_b64encode(email_msg.as_bytes()).decode()
 
         creds = self.authenticate()
 
@@ -95,7 +98,7 @@ class MailSender():
         self,
         *,
         thread_pool: ThreadPoolExecutor = None
-        ) -> Callable[[SendMailSyncFunc], Callable[[...], Awaitable[None]]]:
+        ) -> Callable[[self.SendMailSyncFunc], Callable[[...], Awaitable[None]]]:
         """
         Wrapper for the synchronous _send_mail function.
         If thread_pool == None take the default ThreadPool.
@@ -108,13 +111,13 @@ class MailSender():
             return_val = sync_deliverer(*args, **kwargs)
             return_val.__original__ # Original function.
         """
-        def decorator(func: SendMailSyncFunc) -> Callable[[...], Awaitable[None]]:
+        def decorator(func: self.SendMailSyncFunc) -> Callable[[...], Awaitable[None]]:
             async def wrapper(*args, **kwargs) -> None:
                 # Running _send_mail from current event loop
                 loop = get_running_loop()
                 future = loop.run_in_executor(
                     thread_pool,
-                    _send_mail,
+                    self._send_mail,
                     func(*args, **kwargs)
                 )
                 return await future

@@ -57,6 +57,7 @@ class AuthService():
             SECRET: bytes,
             ISSUER: str,
             JWT_EXP_TIME: timedelta,
+            SENDER_EMAIL: str,
             thread_pool = None,
         ):
         """
@@ -72,6 +73,7 @@ class AuthService():
         self.mail_sender = mail_sender
         self.SECRET = SECRET
         self.ISSUER = ISSUER
+        self.SENDER_EMAIL = SENDER_EMAIL
         self.JWT_EXP_TIME = JWT_EXP_TIME
         self.thread_pool = thread_pool
 
@@ -163,9 +165,10 @@ class AuthService():
         user_email: str | None,
         verification_token: str,
         *,
+        sender_email: str | None = None,
         template: str | None = None,
         **format_map: Any
-        ) -> Callable[[SyncDeliverer], WrapperFunc[Callable[[], EmailMessage]]]:
+        ) -> Callable[[SyncDeliverer], WrapperFunc]:
         """
         Decorates a `sync_deliverer` func to just return an appropriate `EmailMessage` designed
         for verification-mails object with the given user_name, user_email and verification_token.
@@ -174,7 +177,7 @@ class AuthService():
         Raises:
             ValueError
         """
-        def decorator(func: SyncDeliverer) -> WrapperFunc:
+        def decorator(func: self.SyncDeliverer) -> WrapperFunc:
             async def wrapper() -> Callable[[], EmailMessage]:
                 # getting html mail message
                 if template:
@@ -196,7 +199,7 @@ class AuthService():
                 msg = EmailMessage()
                 msg.set_content(body, subtype="html")
                 msg["SUBJECT"] = "Confirm your Media-System account"
-                msg["FROM"] = "marvinmagmud@gmail.com"
+                msg["FROM"] = sender_email if sender_email else self.SENDER_EMAIL
                 msg["TO"] = user_email
 
                 return lambda : EmailMessage
@@ -389,7 +392,7 @@ class AuthService():
             verification_token=token
         )
         def mail_deliverer(): ...
-        mail_deliverer()
+        await mail_deliverer()
 
     async def validate_email_token(self, token: str) -> tuple[str, str] | RepoError:
         """

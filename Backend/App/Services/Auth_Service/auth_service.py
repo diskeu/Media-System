@@ -45,8 +45,8 @@ class AuthService():
     PASSW_REGEX = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$#%*!?])[A-Za-z\d@$#%*!?]{8,20}$"
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
-    AsyncWrapperFunc = Callable[[], Awaitable]
-    AsyncEmailFunc = Callable[[EmailMessage], Awaitable]
+    WrapperFunc = Callable[[], EmailMessage]
+    SyncDeliverer = Callable[[], EmailMessage]
     
     def __init__(
             self,
@@ -159,19 +159,39 @@ class AuthService():
 
     def account_verification_mail(
         self,
-        user_name: str,
-        user_email: str,
-        verification_token: str
-        ) -> Callable[[AsyncEmailFunc], AsyncWrapperFunc]:
+        user_name: str | None,
+        user_email: str | None,
+        verification_token: str,
+        *,
+        template: str | None = None,
+        **format_map: Any
+        ) -> Callable[[SyncDeliverer], WrapperFunc[Callable[[], EmailMessage]]]:
         """
-        Sends Mail using the defined mail in verification_mail.py and
-        returns the google api's json return in dict format
+        Decorates a `sync_deliverer` func to just return an appropriate `EmailMessage` designed
+        for verification-mails object with the given user_name, user_email and verification_token.
+        User_name, user_email & verification_token are only optional if a template is given.
+
+        Raises:
+            ValueError
         """
-        def decorator(func: AsyncEmailFunc) -> AsyncWrapperFunc:
-            async def wrapper() -> None:
+        def decorator(func: SyncDeliverer) -> WrapperFunc:
+            async def wrapper() -> Callable[[], EmailMessage]:
                 # getting html mail message
-                body = build_verification_mail(user_name, verification_token)
-                
+                if template:
+                    body = template.format_map(
+                        {
+                            **format_map,
+                            **({"user_name": user_name} if user_name else {}),
+                            **({"user_email": user_email} if user_email else {}),
+                            **({"verification_token": verification_token} if verification_token else {})
+                        }
+                    )
+                else:
+                    if None in (user_name, user_email, verification_token):
+                        raise ValueError("Error in optional args, Check the docs")
+                    body = build_verification_mail(
+                        user_name, verification_token
+                    )
                 # Building msg
                 msg = EmailMessage()
                 msg.set_content(body, subtype="html")
@@ -179,9 +199,13 @@ class AuthService():
                 msg["FROM"] = "marvinmagmud@gmail.com"
                 msg["TO"] = user_email
 
-                await func(msg)
+                return lambda : EmailMessage
             return wrapper
         return decorator
+    """
+    Sends Mail using the defined mail in verification_mail.py and
+    returns the google api's json return in dict format
+    """
         
     def _validate_jwt(self, jwt: str) -> bool | tuple[dict, dict]:
         """

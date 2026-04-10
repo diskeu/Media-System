@@ -46,7 +46,7 @@ class AuthService():
     EMAIL_REGEX = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
 
     WrapperFunc = Callable[[], EmailMessage]
-    SyncDeliverer = Callable[[], EmailMessage]
+    SyncDeliverer = Callable[[], EmailMessage | None]
     
     def __init__(
             self,
@@ -378,15 +378,18 @@ class AuthService():
             last_seen=DEFAULT
         )
                 
-        # email verification
         # keep all active tokens in-memory
         token = self.verification_tokens_c.generate_token(user)
-        await self.mail_sender.send_mail_async(
-            user.user_name,
-            user.email,
-            verification_token=token,
-            thread_pool=self.thread_pool
+
+        # email verification
+        @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
+        @self.account_verification_mail(
+            user_name=user.user_name,
+            user_email=user.email,
+            verification_token=token
         )
+        def mail_deliverer(): ...
+        mail_deliverer()
 
     async def validate_email_token(self, token: str) -> tuple[str, str] | RepoError:
         """

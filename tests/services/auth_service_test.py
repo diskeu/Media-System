@@ -47,7 +47,7 @@ async def test_registration():
     for token in v_t.token_dict: token = token
     print(await a_s.validate_email_token(token))
 
-# asyncio.run(connect_test())
+asyncio.run(test_registration())
 
 # testing verification_tokens.py
 # _______________________________
@@ -146,4 +146,4 @@ async def mail_send_test_case():
         return msg
     await mail_deliverer("Tim")
 
-asyncio.run(mail_send_test_case())
+# asyncio.run(mail_send_test_case())

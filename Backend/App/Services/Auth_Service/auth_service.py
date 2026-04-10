@@ -1,5 +1,6 @@
 # AUTHENTICATION - Service
 
+from __future__ import annotations
 # ___________type annotations___________
 from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
 from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
@@ -168,7 +169,7 @@ class AuthService():
         sender_email: str | None = None,
         template: str | None = None,
         **format_map: Any
-        ) -> Callable[[SyncDeliverer], WrapperFunc]:
+        ) -> Callable[[SyncDeliverer], self.WrapperFunc]:
         """
         Decorates a `sync_deliverer` func to just return an appropriate `EmailMessage` designed
         for verification-mails object with the given user_name, user_email and verification_token.
@@ -177,8 +178,8 @@ class AuthService():
         Raises:
             ValueError
         """
-        def decorator(func: self.SyncDeliverer) -> WrapperFunc:
-            async def wrapper() -> Callable[[], EmailMessage]:
+        def decorator(func: self.SyncDeliverer) -> self.WrapperFunc:
+            def wrapper() -> Callable[[], EmailMessage]:
                 # getting html mail message
                 if template:
                     body = template.format_map(
@@ -202,7 +203,7 @@ class AuthService():
                 msg["FROM"] = sender_email if sender_email else self.SENDER_EMAIL
                 msg["TO"] = user_email
 
-                return lambda : EmailMessage
+                return msg
             return wrapper
         return decorator
     """
@@ -392,6 +393,7 @@ class AuthService():
             verification_token=token
         )
         def mail_deliverer(): ...
+        
         await mail_deliverer()
 
     async def validate_email_token(self, token: str) -> tuple[str, str] | RepoError:

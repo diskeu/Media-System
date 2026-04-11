@@ -167,6 +167,7 @@ class AuthService():
         verification_token: str,
         *,
         sender_email: str | None = None,
+        subject: str | None = None,
         template: str | None = None,
         **format_map: Any
         ) -> Callable[[SyncDeliverer], self.WrapperFunc]:
@@ -199,7 +200,7 @@ class AuthService():
                 # Building msg
                 msg = EmailMessage()
                 msg.set_content(body, subtype="html")
-                msg["SUBJECT"] = "Confirm your Media-System account"
+                msg["SUBJECT"] = "Confirm your Media-System account" if not subject else subject
                 msg["FROM"] = sender_email if sender_email else self.SENDER_EMAIL
                 msg["TO"] = user_email
 
@@ -439,3 +440,24 @@ class AuthService():
         if isinstance(return_val, RepoError): return return_val
 
         return (token, jwt)
+    
+    async def request_password_reset(self, email: str):
+        """
+        Sends a password reset link
+        Raises
+            InvalidEmailError
+        """
+        if not self.validate_email():
+            raise InvalidEmailError
+
+        @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
+        @self.account_verification_mail(
+            user_name=None,
+            user_email=email,
+            verification_token=None,
+            sender_email=None,
+            template=body,
+            # format map
+            token=token_hash
+        )
+        def password_reset_message(): ...

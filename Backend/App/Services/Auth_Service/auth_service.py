@@ -54,6 +54,7 @@ class AuthService():
             user_repo: UserRepo,
             refresh_token_repo: RefreshTokenRepo,
             verification_tokens_c: VerificationTokens,
+            password_reset_token_c: VerificationTokens,
             mail_sender: MailSender,
             SECRET: bytes,
             ISSUER: str,
@@ -70,6 +71,7 @@ class AuthService():
         """
         self.user_repo = user_repo
         self.verification_tokens_c = verification_tokens_c
+        self.password_reset_token_c: VerificationTokens
         self.refresh_token_repo = refresh_token_repo
         self.mail_sender = mail_sender
         self.SECRET = SECRET
@@ -441,7 +443,7 @@ class AuthService():
 
         return (token, jwt)
     
-    async def request_password_reset(self, email: str):
+    async def request_password_reset(self, email: str, user_m: User):
         """
         Sends a password reset link
         Raises
@@ -450,6 +452,10 @@ class AuthService():
         if not self.validate_email():
             raise InvalidEmailError
 
+        # storing token
+        self.password_reset_token_c.generate_token(
+            user_m=user_m
+        )
         @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
         @self.account_verification_mail(
             user_name=None,

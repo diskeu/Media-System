@@ -18,7 +18,6 @@ class InvalidUserError(BaseException):
     def __init__(self, message = "User doesn't exist"):
         super().__init__(message)
 
-
 class InvalidEmailVerficationTokenError(BaseException):
     def __init__(self, message = "Registration Token is invalid or expired"):
         super().__init__(message)
@@ -33,4 +32,8 @@ class ExpiredRefreshTokenError(InvalidRefreshTokenError):
 
 class ReplacedRefreshTokenUseError(InvalidRefreshTokenError):
     def __init__(self, message = "Given RefreshToken has already been replaced"):
+        super().__init__(message)
+        
+class InvalidPasswordResetTokenError(BaseException):
+    def __init__(self, message = "Given Password Reset Token is not valid"):
         super().__init__(message)

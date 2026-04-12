@@ -27,7 +27,8 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidRefreshTokenError,
     ReplacedRefreshTokenUseError,
     ExpiredRefreshTokenError,
-    InvalidUserError
+    InvalidUserError,
+    InvalidPasswordResetTokenError
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
@@ -467,3 +468,18 @@ class AuthService():
             token=token_hash
         )
         def password_reset_message(): ...
+    
+    async def validate_password_reset_token(self, token: str, new_password: str) -> None | RepoError:
+        """
+        Given a password-reset token & password, validates
+        it and changes the password
+        """
+        if not (user_m := self.password_reset_token_c.validate_token(token)):
+            raise InvalidPasswordResetTokenError 
+
+        new_password_hash = self.__generate_hash(new_password)
+
+        return await self.user_repo.update_single_user(
+                user_id=user_m.user_id,
+                values={"hashed_password": new_password_hash}
+            )

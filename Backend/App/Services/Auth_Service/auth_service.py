@@ -444,13 +444,13 @@ class AuthService():
 
         return (token, jwt)
     
-    async def request_password_reset(self, email: str, user_m: User):
+    async def request_password_reset(self, user_m: User):
         """
         Sends a password reset link
         Raises
             InvalidEmailError
         """
-        if not self.validate_email():
+        if not self.validate_email(user_m.email):
             raise InvalidEmailError
 
         # storing token
@@ -460,7 +460,7 @@ class AuthService():
         @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
         @self.account_verification_mail(
             user_name=None,
-            user_email=email,
+            user_email=user_m.email,
             verification_token=None,
             sender_email=None,
             template=body,

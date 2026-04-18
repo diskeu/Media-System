@@ -32,7 +32,7 @@ from Backend.App.Exceptions.auth_errors import (
 )
 from Backend.App.Exceptions.service_errors import NotNullError
 # ______________________________________
-from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
+from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail, build_password_reset_mail
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 from json import loads as json_loads, dumps as j_dumps, JSONDecodeError
@@ -165,9 +165,9 @@ class AuthService():
 
     def account_verification_mail(
         self,
-        user_name: str | None,
-        user_email: str | None,
-        verification_token: str,
+        user_name: str | None = None,
+        user_email: str | None = None,
+        verification_token: str | None = None,
         *,
         sender_email: str | None = None,
         subject: str | None = None,
@@ -459,12 +459,10 @@ class AuthService():
         )
         @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
         @self.account_verification_mail(
-            user_name=None,
-            user_email=user_m.email,
-            verification_token=None,
             sender_email=None,
-            template=body,
+            template=build_password_reset_mail(),
             # format map
+            user_name=user_m.user_name,
             token=token_hash
         )
         def password_reset_message(): ...

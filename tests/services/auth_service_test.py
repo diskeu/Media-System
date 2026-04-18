@@ -5,8 +5,9 @@ from Backend.App.Database.connection import connect
 from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
 from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 from Backend.App.Repositories.token_repo import RefreshTokenRepo
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from email.message import EmailMessage
+from Backend.App.Models.user import User
 import asyncio
 import time
 async def get_auth_service_credentials():
@@ -49,7 +50,7 @@ async def test_registration():
     for token in v_t.token_dict: token = token
     print(await a_s.validate_email_token(token))
 
-asyncio.run(test_registration())
+# asyncio.run(test_registration())
 
 # testing verification_tokens.py
 # _______________________________
@@ -153,3 +154,31 @@ async def mail_send_test_case():
     await mail_deliverer("Tim")
 
 # asyncio.run(mail_send_test_case())
+
+# Testcase for requesting a password reset
+async def request_password_reset():
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
+    a_s = AuthService(
+        user_repo=u_r,
+        refresh_token_repo=rt_r,
+        verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
+        mail_sender=MailSender(0),
+        SECRET=b"secret3221",
+        SENDER_EMAIL="marvinmagmud@gmail.com",
+        ISSUER="something",
+        JWT_EXP_TIME=timedelta(hours=2)
+    )
+    user_m = User(
+        user_id=12,
+        user_name="abc",
+        hashed_password="123",
+        email="jelenz@gmail.com",
+        birth_date=date(1990, 1, 1),
+        created_at=datetime.now(),
+        last_seen=None
+
+    )
+    await a_s.request_password_reset(user_m)
+
+asyncio.run(request_password_reset())

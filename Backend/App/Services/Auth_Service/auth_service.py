@@ -72,7 +72,7 @@ class AuthService():
         """
         self.user_repo = user_repo
         self.verification_tokens_c = verification_tokens_c
-        self.password_reset_token_c: VerificationTokens
+        self.password_reset_token_c = password_reset_token_c
         self.refresh_token_repo = refresh_token_repo
         self.mail_sender = mail_sender
         self.SECRET = SECRET

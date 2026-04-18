@@ -19,18 +19,20 @@ async def get_auth_service_credentials():
         connection
     )
     v_t = VerificationTokens(12)
+    p_r_t = VerificationTokens(4)
     rt_r = RefreshTokenRepo(
         logger,
         connection
     )
-    return connection, u_r, v_t, rt_r
+    return connection, u_r, v_t, rt_r, p_r_t
 
 async def test_registration():
-    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
     a_s = AuthService(
         user_repo=u_r,
         refresh_token_repo=rt_r,
         verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         SENDER_EMAIL="marvinmagmud@gmail.com",
@@ -60,11 +62,12 @@ asyncio.run(test_registration())
 
 # Testcase for the '_generate_jwt' and '_validate_jwt' funcs
 async def jwt_test_case():
-    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
     auth_service = AuthService(
         user_repo=u_r,
         refresh_token_repo=rt_r,
         verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         SENDER_EMAIL="marvinmagmud@gmail.com",
@@ -87,11 +90,12 @@ async def jwt_test_case():
 
 # Testcase for refresh func
 async def refresh_test_case():
-    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
     auth_service = AuthService(
         user_repo=u_r,
         refresh_token_repo=rt_r,
         verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         SENDER_EMAIL="marvinmagmud@gmail.com",
@@ -106,11 +110,12 @@ async def refresh_test_case():
 
 # Testcase for the login func
 async def login_test_case():
-    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
     auth_service = AuthService(
         user_repo=u_r,
         refresh_token_repo=rt_r,
         verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         SENDER_EMAIL="marvinmagmud@gmail.com",
@@ -123,11 +128,12 @@ async def login_test_case():
 
 # Testcase for mail sending
 async def mail_send_test_case():
-    connection, u_r, v_t, rt_r = await get_auth_service_credentials()
+    connection, u_r, v_t, rt_r, p_r_t = await get_auth_service_credentials()
     a_s = AuthService(
         user_repo=u_r,
         refresh_token_repo=rt_r,
         verification_tokens_c=v_t,
+        password_reset_token_c=p_r_t,
         mail_sender=MailSender(0),
         SECRET=b"secret3221",
         SENDER_EMAIL="marvinmagmud@gmail.com",

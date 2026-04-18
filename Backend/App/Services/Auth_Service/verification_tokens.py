@@ -3,8 +3,9 @@ from Backend.App.Models.user import User
 from hashlib import sha256
 from datetime import datetime
 from asyncio import sleep
-from random import choice
+from random import choices as random_choices
 import hmac
+import string
 class VerificationTokens():
     """
     Small class that helps keep track of active tokens in-memory,
@@ -30,7 +31,7 @@ class VerificationTokens():
             f"{user_m.user_name}"
             f"{
                 ''.join(
-                    random.choices(
+                    random_choices(
                         string.ascii_uppercase + string.digits, k=24
                     )
                 )
@@ -47,7 +48,6 @@ class VerificationTokens():
     
     def validate_token(self, token) -> bool:
         """Checks if token is in the dict -> pops the token if True and returns the User Model"""
-        hmac.compare_digest()
         user_m, val = self.token_dict.get(token, (None, None))
         if val:
             self.token_dict.pop(token)

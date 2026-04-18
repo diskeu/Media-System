@@ -165,8 +165,8 @@ class AuthService():
 
     def account_verification_mail(
         self,
+        user_email: str,
         user_name: str | None = None,
-        user_email: str | None = None,
         verification_token: str | None = None,
         *,
         sender_email: str | None = None,
@@ -458,6 +458,7 @@ class AuthService():
         )
         @self.mail_sender.send_mail_async(thread_pool=self.thread_pool)
         @self.account_verification_mail(
+            user_email=user_m.email,
             sender_email=None,
             template=build_password_reset_mail(),
             # format map
@@ -465,6 +466,8 @@ class AuthService():
             token=token_hash
         )
         def password_reset_message(): ...
+
+        await password_reset_message()
     
     async def validate_password_reset_token(self, token: str, new_password: str) -> None | RepoError:
         """

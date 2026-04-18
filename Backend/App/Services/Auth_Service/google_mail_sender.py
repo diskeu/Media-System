@@ -112,7 +112,6 @@ class MailSender():
             return_val.__original__ # Original function.
         """
         def decorator(func: self.SendMailSyncFunc) -> Callable[[...], Awaitable[None]]:
-            print(func)
             async def wrapper(*args, **kwargs) -> None:
                 # Running _send_mail from current event loop
                 loop = get_running_loop()

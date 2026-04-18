@@ -173,7 +173,7 @@ async def request_password_reset():
         user_id=12,
         user_name="abc",
         hashed_password="123",
-        email="jelenz@gmail.com",
+        email="jelenzt@gmail.com",
         birth_date=date(1990, 1, 1),
         created_at=datetime.now(),
         last_seen=None

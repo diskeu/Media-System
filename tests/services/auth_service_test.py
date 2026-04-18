@@ -180,5 +180,7 @@ async def request_password_reset():
 
     )
     await a_s.request_password_reset(user_m)
+    for token in p_r_t.token_dict: token = token
+    print(await a_s.validate_password_reset_token(token=token, new_password="new_password"))
 
-asyncio.run(request_password_reset())
+# asyncio.run(request_password_reset())

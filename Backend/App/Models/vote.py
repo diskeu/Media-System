@@ -1,5 +1,5 @@
 # Vote Model for votes table
-from Backend.App.Models.base_model import BaseModel
+from .base_model import BaseModel
 
 class Vote(BaseModel):
     def __init__(

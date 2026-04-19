@@ -1,4 +1,4 @@
-from Backend.App.Database.connection import connect 
+from ...Backend.App.Database.connection import connect 
 import asyncio
 async def foo():
     cnx = await connect("/Users/TimJelenz/Desktop/messenger/Backend/Configurations/mysql.conf", "root")

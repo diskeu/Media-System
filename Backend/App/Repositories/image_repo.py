@@ -1,7 +1,7 @@
 # Repo to access / post data, related to the images-table
 from __future__ import annotations
-from Backend.App.Repositories.base_repo import BaseRepo
-from Backend.App.Models.vote import Vote
+from ..Models.vote import Vote
+from .base_repo import BaseRepo
 
 class ImageRepo(BaseRepo):
     def __init__(self, logger, cnx):

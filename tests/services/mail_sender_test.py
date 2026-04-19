@@ -1,6 +1,6 @@
 # Tests for the MailSender class
 
-from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
+from ...Backend.App.Services.Auth_Service.google_mail_sender import MailSender
 
 mail_sender = MailSender( # -> Works
     port=0

@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 # ___________type annotations___________
-from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
-from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
-from Backend.App.Repositories.token_repo import RefreshTokenRepo
-from Backend.App.Repositories.base_repo import BaseRepo
-from Backend.App.Repositories.user_repo import UserRepo
+from .verification_tokens import VerificationTokens
+from .google_mail_sender import MailSender
+from ...Repositories.token_repo import RefreshTokenRepo
+from ...Repositories.base_repo import BaseRepo
+from ...Repositories.user_repo import UserRepo
+from ....utils.sentinel import DEFAULT
 from typing import Callable, Any, Awaitable
-from utils.sentinel import DEFAULT
 # ______________Models__________________
-from Backend.App.Models.user import User
-from Backend.App.Models.refresh_token import RefreshToken
+from ...Models.user import User
+from ...Models.refresh_token import RefreshToken
 # _____Hashing / (en/de)coding etc._____
 from hashlib import sha512
 import bcrypt
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from hmac import digest as hmac_digest, compare_digest
 # _______________Exceptions_____________
-from Backend.App.Exceptions.auth_errors import (
+from ...Exceptions.auth_errors import (
     EmailAlreadyExistsError,
     UserNameAlreadyExistsError,
     InvalidPasswordError,
@@ -30,9 +30,9 @@ from Backend.App.Exceptions.auth_errors import (
     InvalidUserError,
     InvalidPasswordResetTokenError
 )
-from Backend.App.Exceptions.service_errors import NotNullError
+from ...Exceptions.service_errors import NotNullError
 # ______________________________________
-from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail, build_password_reset_mail
+from .verification_mail import build_verification_mail, build_password_reset_mail
 from email.message import EmailMessage
 from datetime import datetime, timedelta
 from json import loads as json_loads, dumps as j_dumps, JSONDecodeError

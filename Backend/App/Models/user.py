@@ -1,7 +1,7 @@
 # User Model for users_table
 from datetime import datetime, date
-from Backend.App.Models.base_model import BaseModel
-from utils.sentinel import DEFAULT
+from .base_model import BaseModel
+from ....utils.sentinel import DEFAULT
 
 class User(BaseModel):
     def __init__(self,

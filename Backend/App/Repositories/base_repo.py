@@ -1,8 +1,8 @@
 # base repo with functions that can be used by other repos
 from __future__ import annotations
-from utils.type_helpers import check_type
-from utils.sql_helpers import format_value
-from utils.sentinel import DEFAULT
+from ....utils.type_helpers import check_type
+from ....utils.sql_helpers import format_value
+from ....utils.sentinel import DEFAULT
 from types import GeneratorType
 from mysql.connector.errors import (
     OperationalError,
@@ -13,13 +13,13 @@ from mysql.connector.errors import (
     DataError,
     Error as MysqlBaseError
 )
-from Backend.App.Exceptions.DB_Exceptions import (
+from ..Exceptions.DB_Exceptions import (
     QuerySyntaxError,
     ExistingAttributeError,
     ModelError,
     SqlReturnTypeError,
 )
-from Backend.App.Models.base_model import BaseModel as Model
+from ..Models.base_model import BaseModel as Model
 from mysql.connector.aio.connection import MySQLConnection as aio_MySQLConnection
 from mysql.connector.aio.cursor import MySQLCursor
 from typing import Iterable

@@ -1,6 +1,6 @@
-from Backend.App.logger_config import setup_logger
-from Backend.App.Database.connection import connect
-from utils.sentinel import DEFAULT
+from ...Backend.App.logger_config import setup_logger
+from ...Backend.App.Database.connection import connect
+from ...utils.sentinel import DEFAULT
 import asyncio
 
 # testing comment_repo

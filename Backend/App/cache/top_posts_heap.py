@@ -1,6 +1,6 @@
 # Top-N-Heap that stores the top hottest post_ids
 from datetime import datetime
-from Backend.App.cache.hotness_calc import calculate_hotness
+from .hotness_calc import calculate_hotness
 import asyncio
 
 class TopNHeap():

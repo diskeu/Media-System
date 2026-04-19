@@ -6,13 +6,12 @@ from asyncio import get_running_loop
 from base64 import urlsafe_b64encode
 from typing import Callable, Awaitable
 
-from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
+from .verification_mail import build_verification_mail
 from email.message import EmailMessage
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from Backend.App.Services.Auth_Service.verification_mail import build_verification_mail
 
 class MailSender():
     SCOPES = ["https://www.googleapis.com/auth/gmail.send"]

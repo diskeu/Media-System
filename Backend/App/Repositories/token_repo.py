@@ -1,8 +1,8 @@
 # Repo to acces / post data related to the refresh tokens table
 from __future__ import annotations
-from Backend.App.Models.refresh_token import RefreshToken
-from Backend.App.Repositories.base_repo import BaseRepo
-from utils.sentinel import DEFAULT
+from ..Models.refresh_token import RefreshToken
+from .base_repo import BaseRepo
+from ....utils.sentinel import DEFAULT
 from datetime import datetime
 
 class RefreshTokenRepo(BaseRepo):

@@ -1,6 +1,6 @@
 # Image Model for images table
-from Backend.App.Models.base_model import BaseModel
-from utils.sentinel import DEFAULT
+from .base_model import BaseModel
+from ....utils.sentinel import DEFAULT
 
 class Image(BaseModel):
     def __init__(

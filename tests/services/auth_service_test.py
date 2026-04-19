@@ -1,13 +1,13 @@
-from Backend.App.Services.Auth_Service.auth_service import AuthService
-from Backend.App.Repositories.user_repo import UserRepo
-from Backend.App.logger_config import setup_logger
-from Backend.App.Database.connection import connect
-from Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
-from Backend.App.Services.Auth_Service.google_mail_sender import MailSender
-from Backend.App.Repositories.token_repo import RefreshTokenRepo
+from ...Backend.App.Services.Auth_Service.auth_service import AuthService
+from ...Backend.App.Repositories.user_repo import UserRepo
+from ...Backend.App.logger_config import setup_logger
+from ...Backend.App.Database.connection import connect
+from ...Backend.App.Services.Auth_Service.verification_tokens import VerificationTokens
+from ...Backend.App.Services.Auth_Service.google_mail_sender import MailSender
+from ...Backend.App.Repositories.token_repo import RefreshTokenRepo
+from ...Backend.App.Models.user import User
 from datetime import datetime, timedelta, date
 from email.message import EmailMessage
-from Backend.App.Models.user import User
 import asyncio
 import time
 async def get_auth_service_credentials():

@@ -1,8 +1,8 @@
-from Backend.App.Repositories.image_repo import ImageRepo
-from Backend.App.Models.image import Image
-from Backend.App.logger_config import setup_logger
-from Backend.App.Database.connection import connect
-from utils.sentinel import DEFAULT
+from ...Backend.App.Repositories.image_repo import ImageRepo
+from ...Backend.App.Models.image import Image
+from ...Backend.App.logger_config import setup_logger
+from ...Backend.App.Database.connection import connect
+from ...utils.sentinel import DEFAULT
 import asyncio
 
 async def connect_test():

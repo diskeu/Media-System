@@ -1,7 +1,7 @@
 # Repo to access / post data, related to the posts-table
 from __future__ import annotations
-from Backend.App.Models.post import Post
-from Backend.App.Repositories.base_repo import BaseRepo
+from ..Models.post import Post
+from .base_repo import BaseRepo
 
 class PostRepo(BaseRepo):
     def __init__(self, logger, cnx):

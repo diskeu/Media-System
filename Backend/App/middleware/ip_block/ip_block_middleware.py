@@ -1,5 +1,5 @@
 # https://fastapi.tiangolo.com/advanced/behind-a-proxy/#redirects-with-https -> Fast-Api-Proxys-Doc
-from Backend.App.Exceptions.Base_Exceptions import InvalidIpError
+from ...Exceptions.Base_Exceptions import InvalidIpInvalidIpError
 
 # IP-processing-Lib
 from ipaddress import (

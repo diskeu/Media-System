@@ -1,5 +1,5 @@
 # class for verification-tokens
-from Backend.App.Models.user import User
+from ...Models.user import User
 from hashlib import sha256
 from datetime import datetime
 from asyncio import sleep

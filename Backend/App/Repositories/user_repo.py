@@ -1,7 +1,7 @@
 # repo to acces / post user data to the database
 from __future__ import annotations
-from Backend.App.Models.user import User
-from Backend.App.Repositories.base_repo import BaseRepo
+from ..Models.user import User
+from .base_repo import BaseRepo
 
 class UserRepo(BaseRepo):
     def __init__(self, logger, cnx):

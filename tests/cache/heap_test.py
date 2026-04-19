@@ -1,5 +1,5 @@
-from Backend.App.cache.hotness_calc import calculate_hotness
-from Backend.App.cache.top_posts_heap import TopNHeap
+from ..cache.hotness_calc import calculate_hotness
+from ..cache.top_posts_heap import TopNHeap
 from datetime import datetime
 arr = [
     (1, calculate_hotness(120, datetime(2026, 3, 7, 9, 0)),  datetime(2026, 3, 7, 9, 0), 120),

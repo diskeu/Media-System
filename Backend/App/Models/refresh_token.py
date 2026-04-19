@@ -1,7 +1,7 @@
 # Refresh Token Model for refresh_tokens table
 from datetime import datetime
-from Backend.App.Models.base_model import BaseModel
-from utils.sentinel import DEFAULT
+from .base_model import BaseModel
+from ....utils.sentinel import DEFAULT
 
 class RefreshToken(BaseModel):
     def __init__(self,

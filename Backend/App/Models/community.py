@@ -1,7 +1,7 @@
 # Community Model for communitys_table
 from datetime import datetime
-from Backend.App.Models.base_model import BaseModel
-from utils.sentinel import DEFAULT
+from .base_model import BaseModel
+from ....utils.sentinel import DEFAULT
 
 class Community(BaseModel): # TODO -> Change DEFAULT of the community_owner
     def __init__(

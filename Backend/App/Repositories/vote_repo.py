@@ -1,7 +1,7 @@
 # Repo to access / post data, related to the votes-table
 from __future__ import annotations
-from Backend.App.Models.vote import Vote
-from Backend.App.Repositories.base_repo import BaseRepo
+from ..Models.vote import Vote
+from .base_repo import BaseRepo
 
 class VoteRepo(BaseRepo):
     def __init__(self, logger, cnx):

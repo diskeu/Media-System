@@ -1,5 +1,5 @@
-from utils.sentinel import DEFAULT
-from utils.type_helpers import convert_to_string
+from .sentinel import DEFAULT
+from .type_helpers import convert_to_string
 i = 0
 
 def format_value(value):

@@ -1,7 +1,7 @@
 # Repo to access / post data, related to the community_members-table
 from __future__ import annotations
-from Backend.App.Models.community_member import CommunityMember
-from Backend.App.Repositories.base_repo import BaseRepo
+from ..Models.community_member import CommunityMember
+from .base_repo import BaseRepo
 
 class CommunityMemberRepo(BaseRepo):
     def __init__(self, logger, cnx):

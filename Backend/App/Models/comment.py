@@ -1,7 +1,7 @@
 # comment Model for comments table
-from Backend.App.Models.base_model import BaseModel 
+from .base_model import BaseModel 
 from datetime import datetime
-from utils.sentinel import DEFAULT
+from ....utils.sentinel import DEFAULT
 
 class Comment(BaseModel):
     def __init__(
